@@ -1,0 +1,221 @@
+homeassistant:
+  external_url: "https://ha.88d.io"
+  internal_url: "http://192.168.4.100:8123"
+
+# Loads default set of integrations. Do not remove.
+default_config:
+zha:
+  custom_quirks_path: /config/custom_zha_quirks
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.1
+    - ::1
+    - 192.168.4.0/22
+    - 172.30.33.0/24
+
+# YAML-managed dashboards
+lovelace:
+  mode: storage
+  dashboards:
+    home-overview:
+      mode: yaml
+      title: Home Overview
+      icon: mdi:home
+      show_in_sidebar: true
+      filename: dashboards/home-overview.yaml
+    server-infra:
+      mode: yaml
+      title: Server & Infra
+      icon: mdi:server
+      show_in_sidebar: true
+      filename: dashboards/server-infra.yaml
+    room-sensors:
+      mode: yaml
+      title: Sensors
+      icon: mdi:motion-sensor
+      show_in_sidebar: true
+      filename: dashboards/sensors.yaml
+    all-shades:
+      mode: yaml
+      title: Shades
+      icon: mdi:blinds
+      show_in_sidebar: true
+      filename: dashboards/shades.yaml
+
+# Monitor Docker containers
+monitor_docker:
+  - name: Docker
+    containers:
+      - homeassistant
+      - plex
+      - nextcloud
+      - nextcloud-db
+      - nextcloud-redis
+      - uptime-kuma
+      - overseerr
+      - tautulli
+      - qbittorrent
+      - radarr
+      - sonarr
+      - prowlarr
+      - flaresolverr
+      - gluetun
+      - mosquitto
+      - matter-server
+      - ntfy
+    rename:
+      homeassistant: Home Assistant
+      nextcloud-db: Nextcloud DB
+      nextcloud-redis: Nextcloud Redis
+      uptime-kuma: Uptime Kuma
+      matter-server: Matter Server
+      flaresolverr: FlareSolverr
+    monitored_conditions:
+      - state
+      - status
+      - uptime
+      - cpu_percentage
+      - memory
+      - memory_percentage
+      - network_speed_up
+      - network_speed_down
+
+# Custom command-line sensors
+command_line:
+  - sensor:
+      name: Server Uptime
+      command: "cat /proc/uptime | awk '{d=int($1/86400); h=int(($1%86400)/3600); m=int(($1%3600)/60); if(d>0) printf \"%dd %dh %dm\",d,h,m; else if(h>0) printf \"%dh %dm\",h,m; else printf \"%dm\",m}'"
+      scan_interval: 300
+  - sensor:
+      name: Disk Usage Media
+      command: "df /mnt/media 2>/dev/null | tail -1 | awk '{print $5}' | tr -d '%'"
+      unit_of_measurement: "%"
+      scan_interval: 3600
+  - sensor:
+      name: Disk Usage Storage
+      command: "df /mnt/storage 2>/dev/null | tail -1 | awk '{print $5}' | tr -d '%'"
+      unit_of_measurement: "%"
+      scan_interval: 3600
+  - sensor:
+      name: Disk Usage SSD2
+      command: "df /mnt/ssd2 2>/dev/null | tail -1 | awk '{print $5}' | tr -d '%'"
+      unit_of_measurement: "%"
+      scan_interval: 3600
+  - sensor:
+      name: Disk Usage Root
+      command: "df / | tail -1 | awk '{print $5}' | tr -d '%'"
+      unit_of_measurement: "%"
+      scan_interval: 3600
+  - sensor:
+      name: Docker Container Count
+      command: "curl -s --unix-socket /var/run/docker.sock http://localhost/containers/json 2>/dev/null | python3 -c 'import json,sys; print(len(json.load(sys.stdin)))' 2>/dev/null || echo 0"
+      scan_interval: 300
+
+  - sensor:
+      name: Network Download Speed
+      command: 'a=$(cat /sys/class/net/enp3s0/statistics/rx_bytes); sleep 1; b=$(cat /sys/class/net/enp3s0/statistics/rx_bytes); awk "BEGIN {printf \"%.1f\", ($b-$a)*8/1000000}"'
+      unit_of_measurement: "Mbit/s"
+      scan_interval: 30
+  - sensor:
+      name: Network Upload Speed
+      command: 'a=$(cat /sys/class/net/enp3s0/statistics/tx_bytes); sleep 1; b=$(cat /sys/class/net/enp3s0/statistics/tx_bytes); awk "BEGIN {printf \"%.1f\", ($b-$a)*8/1000000}"'
+      unit_of_measurement: "Mbit/s"
+      scan_interval: 30
+
+# Input booleans for automation state tracking
+input_boolean:
+  bedtime_active:
+    name: Bedtime Active
+    icon: mdi:weather-night
+  evening_triggered_today:
+    name: Evening Triggered Today
+    icon: mdi:weather-sunset-down
+  wakeup_active:
+    name: Wakeup Active
+    icon: mdi:weather-sunset-up
+  cabinet_fan_auto:
+    name: Cabinet Fan Auto
+    icon: mdi:fan-auto
+  cabinet_temp_alert_suppressed:
+    name: Cabinet Temp Alert Suppressed
+    icon: mdi:bell-off
+  wakeup_triggered_today:
+    name: Wakeup Triggered Today
+    icon: mdi:check-circle
+
+# Cooldown tracking for temperature notifications
+input_datetime:
+  last_temp_warning_ntfy:
+    name: Last Temp Warning Notification
+    has_date: true
+    has_time: true
+  last_temp_critical_ntfy:
+    name: Last Temp Critical Notification
+    has_date: true
+    has_time: true
+
+# ntfy push notifications (notify.88d.io)
+notify:
+  - name: ntfy
+    platform: rest
+    resource: http://localhost:2586
+    method: POST_JSON
+    headers:
+      Authorization: "Bearer tk_yhnchh926wurvhid43k5gifxwpa8d"
+    data:
+      topic: home
+    title_param_name: title
+    message_param_name: message
+
+# Light groups (one entity to control all lights in a room)
+light:
+  - platform: group
+    name: Living Room
+    entities:
+      - light.tv_light_1
+      - light.tv_light_2
+      - light.tv_cabinet_strip
+
+  - platform: group
+    name: Dinning Room
+    entities:
+      - light.moes_matter_light_3
+      - light.moes_matter_light_4
+      - light.moes_matter_light_5
+      - light.moes_matter_light_6
+      - light.moes_matter_light_7
+      - light.moes_matter_light_8
+      - light.dinning_room_plant_light
+
+  - platform: group
+    name: Hallway
+    entities:
+      - light.hallway_spot_1
+      - light.hallway_spot_2
+      - light.hallway_spot_4_2
+      - light.hallway_spot_4
+
+  - platform: group
+    name: Office
+    entities:
+      - light.desk_lamp
+      - light.office_light
+      - light.office_cabinet_strip
+
+  - platform: group
+    name: Bedroom
+    entities:
+      - light.moes_matter_light
+      - light.moes_matter_light_2
+      - light.underbed_1
+      - light.underbed_2

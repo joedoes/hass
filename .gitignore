@@ -1,0 +1,28 @@
+# Databases
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+home-assistant.log
+home-assistant.log.*
+home-assistant.log.fault
+
+# Runtime / lock files
+.ha_run.lock
+
+# Secrets (passwords, tokens)
+secrets.yaml
+
+# HA internal storage (contains auth tokens, integrations state)
+.storage/
+
+# Large/generated directories
+backups/
+deps/
+tts/
+.cache/
+.cloud/
+
+# Typo file
+confirguration.yml

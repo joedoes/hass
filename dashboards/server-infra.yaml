@@ -1,0 +1,400 @@
+title: Server & Infra
+views:
+  # ── VIEW 1: SERVER ────────────────────────────────────────────
+  - title: Server
+    path: server
+    icon: mdi:server
+    cards:
+      # System overview chips
+      - type: custom:mushroom-title-card
+        title: a2-server
+        subtitle: Minisforum MSA2 — Ubuntu 24.04
+
+      # CPU & Memory gauges
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.system_monitor_processor_use
+            name: CPU
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 60
+              red: 85
+          - type: gauge
+            entity: sensor.system_monitor_memory_usage
+            name: RAM
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 70
+              red: 90
+
+      # Disk usage gauges
+      - type: custom:mushroom-title-card
+        title: Disk Usage
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.disk_usage_root
+            name: Root (250GB)
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 70
+              red: 90
+          - type: gauge
+            entity: sensor.disk_usage_media
+            name: Media (4TB)
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 80
+              red: 95
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.disk_usage_storage
+            name: Storage (8TB)
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 80
+              red: 95
+          - type: gauge
+            entity: sensor.disk_usage_ssd2
+            name: SSD2 (1TB)
+            min: 0
+            max: 100
+            severity:
+              green: 0
+              yellow: 80
+              red: 95
+
+      # Server info
+      - type: custom:mushroom-title-card
+        title: Server Info
+      - type: entities
+        entities:
+          - entity: sensor.server_uptime
+            name: Uptime
+            icon: mdi:clock-outline
+          - entity: sensor.docker_container_count
+            name: Docker Containers
+            icon: mdi:docker
+          - entity: sensor.system_monitor_processor_temperature
+            name: CPU Temperature
+            icon: mdi:thermometer
+          - entity: sensor.den_1_a2_server_wired_ip_address
+            name: LAN IP
+            icon: mdi:ip-network
+          - entity: sensor.network_download_speed
+            name: Network Download
+            icon: mdi:download-network
+          - entity: sensor.network_upload_speed
+            name: Network Upload
+            icon: mdi:upload-network
+
+      # Server cabinet environment
+      - type: custom:mushroom-title-card
+        title: Server Cabinet
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.server_cabinet_sensor_temperature
+            name: Temperature
+            min: 15
+            max: 50
+            unit: "°C"
+            severity:
+              green: 15
+              yellow: 35
+              red: 42
+          - type: gauge
+            entity: sensor.server_cabinet_sensor_humidity
+            name: Humidity
+            min: 0
+            max: 100
+            unit: "%"
+            severity:
+              green: 0
+              yellow: 60
+              red: 80
+
+  # ── VIEW 2: DOCKER ────────────────────────────────────────────
+
+      # Cabinet fan
+      - type: custom:mushroom-title-card
+        title: Cabinet Fan
+      - type: custom:mushroom-fan-card
+        entity: fan.server_cabinet_fan_cabinet_fan
+        name: Cabinet Fan
+        show_percentage_control: true
+        show_oscillate_control: false
+        icon_animation: true
+      - type: entities
+        entities:
+          - entity: sensor.server_cabinet_fan_cabinet_fan_rpm
+            name: Current RPM
+            icon: mdi:fan
+          - type: attribute
+            entity: fan.server_cabinet_fan_cabinet_fan
+            attribute: percentage
+            name: Current Speed
+            icon: mdi:speedometer
+            suffix: "%"
+          - entity: input_boolean.cabinet_fan_auto
+            name: Auto Control
+            icon: mdi:fan-auto
+
+
+  - title: Docker
+    path: docker
+    icon: mdi:docker
+    cards:
+      - type: custom:mushroom-title-card
+        title: Docker Containers
+        subtitle: All running services
+
+      # Core services
+      - type: custom:mushroom-title-card
+        title: Core Services
+      - type: entities
+        entities:
+          - entity: sensor.docker_homeassistant_state
+            name: Home Assistant
+            icon: mdi:home-assistant
+          - entity: sensor.docker_plex_state
+            name: Plex
+            icon: mdi:plex
+          - entity: sensor.docker_nextcloud_state
+            name: Nextcloud
+            icon: mdi:cloud
+          - entity: sensor.docker_nextcloud_db_state
+            name: Nextcloud DB
+            icon: mdi:database
+          - entity: sensor.docker_nextcloud_redis_state
+            name: Nextcloud Redis
+            icon: mdi:memory
+          - entity: sensor.docker_uptime_kuma_state
+            name: Uptime Kuma
+            icon: mdi:monitor-dashboard
+          - entity: sensor.docker_ntfy_state
+            name: ntfy
+            icon: mdi:bell-ring
+
+      # Media stack
+      - type: custom:mushroom-title-card
+        title: Media Stack (VPN)
+      - type: entities
+        entities:
+          - entity: sensor.docker_gluetun_state
+            name: Gluetun (VPN)
+            icon: mdi:vpn
+          - entity: sensor.docker_qbittorrent_state
+            name: qBittorrent
+            icon: mdi:download
+          - entity: sensor.docker_radarr_state
+            name: Radarr
+            icon: mdi:movie
+          - entity: sensor.docker_sonarr_state
+            name: Sonarr
+            icon: mdi:television-classic
+          - entity: sensor.docker_prowlarr_state
+            name: Prowlarr
+            icon: mdi:magnify
+          - entity: sensor.docker_flaresolverr_state
+            name: FlareSolverr
+            icon: mdi:shield-sun
+          - entity: sensor.docker_overseerr_state
+            name: Overseerr
+            icon: mdi:movie-search
+          - entity: sensor.docker_tautulli_state
+            name: Tautulli
+            icon: mdi:chart-line
+
+      # Smart home
+      - type: custom:mushroom-title-card
+        title: Smart Home
+      - type: entities
+        entities:
+          - entity: sensor.docker_mosquitto_state
+            name: Mosquitto MQTT
+            icon: mdi:antenna
+          - entity: sensor.docker_matter_server_state
+            name: Matter Server
+            icon: mdi:chip
+
+      # Download activity
+      - type: custom:mushroom-title-card
+        title: Download Activity
+      - type: entities
+        entities:
+          - entity: sensor.qbittorrent_download_speed
+            name: Download Speed
+            icon: mdi:download
+          - entity: sensor.qbittorrent_upload_speed
+            name: Upload Speed
+            icon: mdi:upload
+          - entity: sensor.qbittorrent_active_torrents
+            name: Active Torrents
+            icon: mdi:magnet
+          - entity: sensor.qbittorrent_all_torrents
+            name: Total Torrents
+            icon: mdi:file-multiple
+
+  # ── VIEW 3: SERVICES ──────────────────────────────────────────
+  - title: Services
+    path: services
+    icon: mdi:link-variant
+    cards:
+      - type: custom:mushroom-title-card
+        title: Quick Links
+        subtitle: Tap to open service web UIs
+
+      # Public services (via Cloudflare)
+      - type: custom:mushroom-title-card
+        title: Public Services
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Plex
+            icon: mdi:plex
+            icon_color: amber
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: https://plex.88d.io
+          - type: custom:mushroom-template-card
+            primary: Nextcloud
+            icon: mdi:cloud
+            icon_color: blue
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: https://cloud.88d.io
+          - type: custom:mushroom-template-card
+            primary: Overseerr
+            icon: mdi:movie-search
+            icon_color: purple
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: https://overseerr.88d.io
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Uptime Kuma
+            icon: mdi:monitor-dashboard
+            icon_color: green
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: https://status.88d.io
+          - type: custom:mushroom-template-card
+            primary: Tautulli
+            icon: mdi:chart-line
+            icon_color: orange
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: https://tautulli.88d.io
+          - type: custom:mushroom-template-card
+            primary: ntfy
+            icon: mdi:bell-ring
+            icon_color: yellow
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: https://notify.88d.io
+
+      # Local-only services
+      - type: custom:mushroom-title-card
+        title: Local Only (LAN)
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: qBittorrent
+            icon: mdi:download
+            icon_color: teal
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: http://qbit.local
+          - type: custom:mushroom-template-card
+            primary: Radarr
+            icon: mdi:movie
+            icon_color: orange
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: http://radarr.local
+          - type: custom:mushroom-template-card
+            primary: Sonarr
+            icon: mdi:television-classic
+            icon_color: blue
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: http://sonarr.local
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Prowlarr
+            icon: mdi:magnify
+            icon_color: cyan
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: http://prowlarr.local
+          - type: custom:mushroom-template-card
+            primary: Home Assistant
+            icon: mdi:home-assistant
+            icon_color: light-blue
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: http://ha.local
+          - type: custom:mushroom-template-card
+            primary: Frigate
+            icon: mdi:cctv
+            icon_color: red
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: http://frigate-device.local:8971
+
+      # Staging apps
+      - type: custom:mushroom-title-card
+        title: Staging Apps
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: PSQ
+            icon: mdi:application
+            icon_color: pink
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: https://psq.88d.io
+          - type: custom:mushroom-template-card
+            primary: Prism
+            icon: mdi:application
+            icon_color: deep-purple
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: https://prism.88d.io
+          - type: custom:mushroom-template-card
+            primary: Pulse
+            icon: mdi:application
+            icon_color: indigo
+            layout: vertical
+            tap_action:
+              action: url
+              url_path: https://pulse.88d.io

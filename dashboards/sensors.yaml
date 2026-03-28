@@ -1,0 +1,841 @@
+title: Sensors
+views:
+  # ── VIEW 1: OVERVIEW ──────────────────────────────────────────
+  - title: Overview
+    path: overview
+    icon: mdi:eye
+    cards:
+      # Presence at a glance — all rooms in one row
+      - type: custom:mushroom-title-card
+        title: Presence
+        subtitle: Room presence detection
+
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.office_sensor_presence
+            name: Office
+            icon: mdi:desk
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.living_room_sensor_presence
+            name: Living Room
+            icon: mdi:sofa
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.bedroom_sensor_presence
+            name: Bedroom
+            icon: mdi:bed
+            layout: vertical
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.hallway_sensor_presence
+            name: Hallway
+            icon: mdi:door-open
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.guest_room_sensor_presence
+            name: Guest Room
+            icon: mdi:bed-outline
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: binary_sensor.kitchen_sensor_presence
+            name: Kitchen
+            icon: mdi:stove
+            layout: vertical
+
+      # Target distance
+      - type: custom:mushroom-title-card
+        title: Target Distance
+        subtitle: Distance to detected person (m)
+
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.office_sensor_target_distance
+            name: Office
+            icon: mdi:signal-distance-variant
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.living_room_sensor_target_distance
+            name: Living Room
+            icon: mdi:signal-distance-variant
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.bedroom_sensor_target_distance
+            name: Bedroom
+            icon: mdi:signal-distance-variant
+            layout: vertical
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.hallway_sensor_target_distance
+            name: Hallway
+            icon: mdi:signal-distance-variant
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.guest_room_sensor_target_distance
+            name: Guest Room
+            icon: mdi:signal-distance-variant
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.kitchen_sensor_target_distance
+            name: Kitchen
+            icon: mdi:signal-distance-variant
+            layout: vertical
+
+      # Temperature comparison
+      - type: custom:mushroom-title-card
+        title: Temperature
+        subtitle: Across rooms
+
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.office_sensor_temperature
+            name: Office
+            icon: mdi:thermometer
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.living_room_sensor_temperature
+            name: Living Room
+            icon: mdi:thermometer
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.bedroom_sensor_temperature
+            name: Bedroom
+            icon: mdi:thermometer
+            layout: vertical
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.hallway_sensor_temperature
+            name: Hallway
+            icon: mdi:thermometer
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.guest_room_sensor_temperature
+            name: Guest Room
+            icon: mdi:thermometer
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.kitchen_sensor_temperature
+            name: Kitchen
+            icon: mdi:thermometer
+            layout: vertical
+
+      # Aqara temp/humidity sensors (WSDCGQ11LM)
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.office_sensor_2_temperature
+            name: Office (Aqara)
+            icon: mdi:thermometer
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.living_room_sensor_2_temperature
+            name: Living Room (Aqara)
+            icon: mdi:thermometer
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.bedroom_sensor_2_temperature
+            name: Bedroom (Aqara)
+            icon: mdi:thermometer
+            layout: vertical
+
+      # Temperature history graph
+      - type: history-graph
+        title: Temperature (24h)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.office_sensor_temperature
+            name: Office (FP300)
+          - entity: sensor.office_sensor_2_temperature
+            name: Office (Aqara)
+          - entity: sensor.living_room_sensor_temperature
+            name: Living Room (FP300)
+          - entity: sensor.living_room_sensor_2_temperature
+            name: Living Room (Aqara)
+          - entity: sensor.bedroom_sensor_temperature
+            name: Bedroom (FP300)
+          - entity: sensor.bedroom_sensor_2_temperature
+            name: Bedroom (Aqara)
+          - entity: sensor.hallway_sensor_temperature
+            name: Hallway
+          - entity: sensor.guest_room_sensor_temperature
+            name: Guest Room
+          - entity: sensor.kitchen_sensor_temperature
+            name: Kitchen
+
+      # Humidity comparison
+      - type: custom:mushroom-title-card
+        title: Humidity
+        subtitle: Across rooms
+
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.office_sensor_humidity
+            name: Office
+            icon: mdi:water-percent
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.living_room_sensor_humidity
+            name: Living Room
+            icon: mdi:water-percent
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.bedroom_sensor_humidity
+            name: Bedroom
+            icon: mdi:water-percent
+            layout: vertical
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.hallway_sensor_humidity
+            name: Hallway
+            icon: mdi:water-percent
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.guest_room_sensor_humidity
+            name: Guest Room
+            icon: mdi:water-percent
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.kitchen_sensor_humidity
+            name: Kitchen
+            icon: mdi:water-percent
+            layout: vertical
+
+      # Aqara humidity sensors (WSDCGQ11LM)
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.office_sensor_2_humidity
+            name: Office (Aqara)
+            icon: mdi:water-percent
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.living_room_sensor_2_humidity
+            name: Living Room (Aqara)
+            icon: mdi:water-percent
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.bedroom_sensor_2_humidity
+            name: Bedroom (Aqara)
+            icon: mdi:water-percent
+            layout: vertical
+
+      # Humidity history graph
+      - type: history-graph
+        title: Humidity (24h)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.office_sensor_humidity
+            name: Office (FP300)
+          - entity: sensor.office_sensor_2_humidity
+            name: Office (Aqara)
+          - entity: sensor.living_room_sensor_humidity
+            name: Living Room (FP300)
+          - entity: sensor.living_room_sensor_2_humidity
+            name: Living Room (Aqara)
+          - entity: sensor.bedroom_sensor_humidity
+            name: Bedroom (FP300)
+          - entity: sensor.bedroom_sensor_2_humidity
+            name: Bedroom (Aqara)
+          - entity: sensor.hallway_sensor_humidity
+            name: Hallway
+          - entity: sensor.guest_room_sensor_humidity
+            name: Guest Room
+          - entity: sensor.kitchen_sensor_humidity
+            name: Kitchen
+
+      # Illuminance
+      - type: custom:mushroom-title-card
+        title: Light Level
+        subtitle: Illuminance (lux)
+
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.office_sensor_illuminance
+            name: Office
+            icon: mdi:brightness-6
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.living_room_sensor_illuminance
+            name: Living Room
+            icon: mdi:brightness-6
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.bedroom_sensor_illuminance
+            name: Bedroom
+            icon: mdi:brightness-6
+            layout: vertical
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.hallway_sensor_illuminance
+            name: Hallway
+            icon: mdi:brightness-6
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.guest_room_sensor_illuminance
+            name: Guest Room
+            icon: mdi:brightness-6
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.kitchen_sensor_illuminance
+            name: Kitchen
+            icon: mdi:brightness-6
+            layout: vertical
+
+      # Illuminance history
+      - type: history-graph
+        title: Light Level (24h)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.office_sensor_illuminance
+            name: Office
+          - entity: sensor.living_room_sensor_illuminance
+            name: Living Room
+          - entity: sensor.bedroom_sensor_illuminance
+            name: Bedroom
+          - entity: sensor.hallway_sensor_illuminance
+            name: Hallway
+          - entity: sensor.guest_room_sensor_illuminance
+            name: Guest Room
+          - entity: sensor.kitchen_sensor_illuminance
+            name: Kitchen
+
+      # Pressure (Aqara WSDCGQ11LM only)
+      - type: custom:mushroom-title-card
+        title: Pressure
+        subtitle: Atmospheric pressure (hPa)
+
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.office_sensor_2_pressure
+            name: Office
+            icon: mdi:gauge
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.living_room_sensor_2_pressure
+            name: Living Room
+            icon: mdi:gauge
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.bedroom_sensor_2_pressure
+            name: Bedroom
+            icon: mdi:gauge
+            layout: vertical
+
+      # Pressure history
+      - type: history-graph
+        title: Pressure (24h)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.office_sensor_2_pressure
+            name: Office
+          - entity: sensor.living_room_sensor_2_pressure
+            name: Living Room
+          - entity: sensor.bedroom_sensor_2_pressure
+            name: Bedroom
+
+  # ── VIEW 2: ROOMS ─────────────────────────────────────────────
+  - title: Rooms
+    path: rooms
+    icon: mdi:floor-plan
+    cards:
+      # Office
+      - type: custom:mushroom-title-card
+        title: Office
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: binary_sensor.office_sensor_presence
+            icon: mdi:motion-sensor
+            name: Presence
+          - type: entity
+            entity: sensor.office_sensor_target_distance
+            icon: mdi:signal-distance-variant
+            name: Distance
+          - type: entity
+            entity: sensor.office_sensor_temperature
+            icon: mdi:thermometer
+          - type: entity
+            entity: sensor.office_sensor_humidity
+            icon: mdi:water-percent
+          - type: entity
+            entity: sensor.office_sensor_illuminance
+            icon: mdi:brightness-6
+          - type: entity
+            entity: sensor.office_sensor_battery
+            icon: mdi:battery
+      - type: entities
+        title: Aqara Temp/Humidity Sensor
+        entities:
+          - entity: sensor.office_sensor_2_temperature
+            name: Temperature
+            icon: mdi:thermometer
+          - entity: sensor.office_sensor_2_humidity
+            name: Humidity
+            icon: mdi:water-percent
+          - entity: sensor.office_sensor_2_pressure
+            name: Pressure
+            icon: mdi:gauge
+          - entity: sensor.office_sensor_2_battery
+            name: Battery
+            icon: mdi:battery
+      - type: entities
+        entities:
+          - entity: select.office_sensor_motion_sensitivity
+            name: Motion Sensitivity
+            icon: mdi:tune
+          - entity: select.office_sensor_presence_detection_options
+            name: Detection Mode
+            icon: mdi:radar
+          - entity: number.office_sensor_absence_delay_timer
+            name: Absence Delay
+            icon: mdi:timer-outline
+          - entity: number.office_sensor_pir_detection_interval
+            name: PIR Interval
+            icon: mdi:motion-sensor
+      - type: entities
+        title: Detection Ranges
+        entities:
+          - entity: switch.office_sensor_detection_range_0_1_m
+            name: 0–1 m
+          - entity: switch.office_sensor_detection_range_1_2_m
+            name: 1–2 m
+          - entity: switch.office_sensor_detection_range_2_3_m
+            name: 2–3 m
+          - entity: switch.office_sensor_detection_range_3_4_m
+            name: 3–4 m
+          - entity: switch.office_sensor_detection_range_4_5_m
+            name: 4–5 m
+          - entity: switch.office_sensor_detection_range_5_6_m
+            name: 5–6 m
+      - type: entities
+        title: AI & Learning
+        entities:
+          - entity: switch.office_sensor_ai_adaptive_sensitivity
+            name: AI Adaptive Sensitivity
+            icon: mdi:brain
+          - entity: switch.office_sensor_ai_interference_source_self_identification
+            name: AI Interference Detection
+            icon: mdi:shield-check
+          - entity: button.office_sensor_start_spatial_learning
+            name: Start Spatial Learning
+            icon: mdi:school
+
+      # Living Room
+      - type: custom:mushroom-title-card
+        title: Living Room
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: binary_sensor.living_room_sensor_presence
+            icon: mdi:motion-sensor
+            name: Presence
+          - type: entity
+            entity: sensor.living_room_sensor_target_distance
+            icon: mdi:signal-distance-variant
+            name: Distance
+          - type: entity
+            entity: sensor.living_room_sensor_temperature
+            icon: mdi:thermometer
+          - type: entity
+            entity: sensor.living_room_sensor_humidity
+            icon: mdi:water-percent
+          - type: entity
+            entity: sensor.living_room_sensor_illuminance
+            icon: mdi:brightness-6
+          - type: entity
+            entity: sensor.living_room_sensor_battery
+            icon: mdi:battery
+      - type: entities
+        title: Aqara Temp/Humidity Sensor
+        entities:
+          - entity: sensor.living_room_sensor_2_temperature
+            name: Temperature
+            icon: mdi:thermometer
+          - entity: sensor.living_room_sensor_2_humidity
+            name: Humidity
+            icon: mdi:water-percent
+          - entity: sensor.living_room_sensor_2_pressure
+            name: Pressure
+            icon: mdi:gauge
+          - entity: sensor.living_room_sensor_2_battery
+            name: Battery
+            icon: mdi:battery
+      - type: entities
+        entities:
+          - entity: select.living_room_sensor_motion_sensitivity
+            name: Motion Sensitivity
+            icon: mdi:tune
+          - entity: select.living_room_sensor_presence_detection_options
+            name: Detection Mode
+            icon: mdi:radar
+          - entity: number.living_room_sensor_absence_delay_timer
+            name: Absence Delay
+            icon: mdi:timer-outline
+          - entity: number.living_room_sensor_pir_detection_interval
+            name: PIR Interval
+            icon: mdi:motion-sensor
+      - type: entities
+        title: Detection Ranges
+        entities:
+          - entity: switch.living_room_sensor_detection_range_0_1_m
+            name: 0–1 m
+          - entity: switch.living_room_sensor_detection_range_1_2_m
+            name: 1–2 m
+          - entity: switch.living_room_sensor_detection_range_2_3_m
+            name: 2–3 m
+          - entity: switch.living_room_sensor_detection_range_3_4_m
+            name: 3–4 m
+          - entity: switch.living_room_sensor_detection_range_4_5_m
+            name: 4–5 m
+          - entity: switch.living_room_sensor_detection_range_5_6_m
+            name: 5–6 m
+      - type: entities
+        title: AI & Learning
+        entities:
+          - entity: switch.living_room_sensor_ai_adaptive_sensitivity
+            name: AI Adaptive Sensitivity
+            icon: mdi:brain
+          - entity: switch.living_room_sensor_ai_interference_source_self_identification
+            name: AI Interference Detection
+            icon: mdi:shield-check
+          - entity: button.living_room_sensor_start_spatial_learning
+            name: Start Spatial Learning
+            icon: mdi:school
+
+      # Bedroom
+      - type: custom:mushroom-title-card
+        title: Bedroom
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: binary_sensor.bedroom_sensor_presence
+            icon: mdi:motion-sensor
+            name: Presence
+          - type: entity
+            entity: sensor.bedroom_sensor_target_distance
+            icon: mdi:signal-distance-variant
+            name: Distance
+          - type: entity
+            entity: sensor.bedroom_sensor_temperature
+            icon: mdi:thermometer
+          - type: entity
+            entity: sensor.bedroom_sensor_humidity
+            icon: mdi:water-percent
+          - type: entity
+            entity: sensor.bedroom_sensor_illuminance
+            icon: mdi:brightness-6
+          - type: entity
+            entity: sensor.bedroom_sensor_battery
+            icon: mdi:battery
+      - type: entities
+        title: Aqara Temp/Humidity Sensor
+        entities:
+          - entity: sensor.bedroom_sensor_2_temperature
+            name: Temperature
+            icon: mdi:thermometer
+          - entity: sensor.bedroom_sensor_2_humidity
+            name: Humidity
+            icon: mdi:water-percent
+          - entity: sensor.bedroom_sensor_2_pressure
+            name: Pressure
+            icon: mdi:gauge
+          - entity: sensor.bedroom_sensor_2_battery
+            name: Battery
+            icon: mdi:battery
+      - type: entities
+        entities:
+          - entity: select.bedroom_sensor_motion_sensitivity
+            name: Motion Sensitivity
+            icon: mdi:tune
+          - entity: select.bedroom_sensor_presence_detection_options
+            name: Detection Mode
+            icon: mdi:radar
+          - entity: number.bedroom_sensor_absence_delay_timer
+            name: Absence Delay
+            icon: mdi:timer-outline
+          - entity: number.bedroom_sensor_pir_detection_interval
+            name: PIR Interval
+            icon: mdi:motion-sensor
+      - type: entities
+        title: Detection Ranges
+        entities:
+          - entity: switch.bedroom_sensor_detection_range_0_1_m
+            name: 0–1 m
+          - entity: switch.bedroom_sensor_detection_range_1_2_m
+            name: 1–2 m
+          - entity: switch.bedroom_sensor_detection_range_2_3_m
+            name: 2–3 m
+          - entity: switch.bedroom_sensor_detection_range_3_4_m
+            name: 3–4 m
+          - entity: switch.bedroom_sensor_detection_range_4_5_m
+            name: 4–5 m
+          - entity: switch.bedroom_sensor_detection_range_5_6_m
+            name: 5–6 m
+      - type: entities
+        title: AI & Learning
+        entities:
+          - entity: switch.bedroom_sensor_ai_adaptive_sensitivity
+            name: AI Adaptive Sensitivity
+            icon: mdi:brain
+          - entity: switch.bedroom_sensor_ai_interference_source_self_identification
+            name: AI Interference Detection
+            icon: mdi:shield-check
+          - entity: button.bedroom_sensor_start_spatial_learning
+            name: Start Spatial Learning
+            icon: mdi:school
+
+      # Hallway
+      - type: custom:mushroom-title-card
+        title: Hallway
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: binary_sensor.hallway_sensor_presence
+            icon: mdi:motion-sensor
+            name: Presence
+          - type: entity
+            entity: sensor.hallway_sensor_target_distance
+            icon: mdi:signal-distance-variant
+            name: Distance
+          - type: entity
+            entity: sensor.hallway_sensor_temperature
+            icon: mdi:thermometer
+          - type: entity
+            entity: sensor.hallway_sensor_humidity
+            icon: mdi:water-percent
+          - type: entity
+            entity: sensor.hallway_sensor_illuminance
+            icon: mdi:brightness-6
+          - type: entity
+            entity: sensor.hallway_sensor_battery
+            icon: mdi:battery
+      - type: entities
+        entities:
+          - entity: select.hallway_sensor_motion_sensitivity
+            name: Motion Sensitivity
+            icon: mdi:tune
+          - entity: select.hallway_sensor_presence_detection_options
+            name: Detection Mode
+            icon: mdi:radar
+          - entity: number.hallway_sensor_absence_delay_timer
+            name: Absence Delay
+            icon: mdi:timer-outline
+          - entity: number.hallway_sensor_pir_detection_interval
+            name: PIR Interval
+            icon: mdi:motion-sensor
+      - type: entities
+        title: Detection Ranges
+        entities:
+          - entity: switch.hallway_sensor_detection_range_0_1_m
+            name: 0–1 m
+          - entity: switch.hallway_sensor_detection_range_1_2_m
+            name: 1–2 m
+          - entity: switch.hallway_sensor_detection_range_2_3_m
+            name: 2–3 m
+          - entity: switch.hallway_sensor_detection_range_3_4_m
+            name: 3–4 m
+          - entity: switch.hallway_sensor_detection_range_4_5_m
+            name: 4–5 m
+          - entity: switch.hallway_sensor_detection_range_5_6_m
+            name: 5–6 m
+      - type: entities
+        title: AI & Learning
+        entities:
+          - entity: switch.hallway_sensor_ai_adaptive_sensitivity
+            name: AI Adaptive Sensitivity
+            icon: mdi:brain
+          - entity: switch.hallway_sensor_ai_interference_source_self_identification
+            name: AI Interference Detection
+            icon: mdi:shield-check
+          - entity: button.hallway_sensor_start_spatial_learning
+            name: Start Spatial Learning
+            icon: mdi:school
+
+      # Guest Room
+      - type: custom:mushroom-title-card
+        title: Guest Room
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: binary_sensor.guest_room_sensor_presence
+            icon: mdi:motion-sensor
+            name: Presence
+          - type: entity
+            entity: sensor.guest_room_sensor_target_distance
+            icon: mdi:signal-distance-variant
+            name: Distance
+          - type: entity
+            entity: sensor.guest_room_sensor_temperature
+            icon: mdi:thermometer
+          - type: entity
+            entity: sensor.guest_room_sensor_humidity
+            icon: mdi:water-percent
+          - type: entity
+            entity: sensor.guest_room_sensor_illuminance
+            icon: mdi:brightness-6
+          - type: entity
+            entity: sensor.guest_room_sensor_battery
+            icon: mdi:battery
+      - type: entities
+        entities:
+          - entity: select.guest_room_sensor_motion_sensitivity
+            name: Motion Sensitivity
+            icon: mdi:tune
+          - entity: select.guest_room_sensor_presence_detection_options
+            name: Detection Mode
+            icon: mdi:radar
+          - entity: number.guest_room_sensor_absence_delay_timer
+            name: Absence Delay
+            icon: mdi:timer-outline
+          - entity: number.guest_room_sensor_pir_detection_interval
+            name: PIR Interval
+            icon: mdi:motion-sensor
+      - type: entities
+        title: Detection Ranges
+        entities:
+          - entity: switch.guest_room_sensor_detection_range_0_1_m
+            name: 0–1 m
+          - entity: switch.guest_room_sensor_detection_range_1_2_m
+            name: 1–2 m
+          - entity: switch.guest_room_sensor_detection_range_2_3_m
+            name: 2–3 m
+          - entity: switch.guest_room_sensor_detection_range_3_4_m
+            name: 3–4 m
+          - entity: switch.guest_room_sensor_detection_range_4_5_m
+            name: 4–5 m
+          - entity: switch.guest_room_sensor_detection_range_5_6_m
+            name: 5–6 m
+      - type: entities
+        title: AI & Learning
+        entities:
+          - entity: switch.guest_room_sensor_ai_adaptive_sensitivity
+            name: AI Adaptive Sensitivity
+            icon: mdi:brain
+          - entity: switch.guest_room_sensor_ai_interference_source_self_identification
+            name: AI Interference Detection
+            icon: mdi:shield-check
+          - entity: button.guest_room_sensor_start_spatial_learning
+            name: Start Spatial Learning
+            icon: mdi:school
+
+      # Kitchen
+      - type: custom:mushroom-title-card
+        title: Kitchen
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: binary_sensor.kitchen_sensor_presence
+            icon: mdi:motion-sensor
+            name: Presence
+          - type: entity
+            entity: sensor.kitchen_sensor_target_distance
+            icon: mdi:signal-distance-variant
+            name: Distance
+          - type: entity
+            entity: sensor.kitchen_sensor_temperature
+            icon: mdi:thermometer
+          - type: entity
+            entity: sensor.kitchen_sensor_humidity
+            icon: mdi:water-percent
+          - type: entity
+            entity: sensor.kitchen_sensor_illuminance
+            icon: mdi:brightness-6
+          - type: entity
+            entity: sensor.kitchen_sensor_battery
+            icon: mdi:battery
+      - type: entities
+        entities:
+          - entity: select.kitchen_sensor_motion_sensitivity
+            name: Motion Sensitivity
+            icon: mdi:tune
+          - entity: select.kitchen_sensor_presence_detection_options
+            name: Detection Mode
+            icon: mdi:radar
+          - entity: number.kitchen_sensor_absence_delay_timer
+            name: Absence Delay
+            icon: mdi:timer-outline
+          - entity: number.kitchen_sensor_pir_detection_interval
+            name: PIR Interval
+            icon: mdi:motion-sensor
+      - type: entities
+        title: Detection Ranges
+        entities:
+          - entity: switch.kitchen_sensor_detection_range_0_1_m
+            name: 0–1 m
+          - entity: switch.kitchen_sensor_detection_range_1_2_m
+            name: 1–2 m
+          - entity: switch.kitchen_sensor_detection_range_2_3_m
+            name: 2–3 m
+          - entity: switch.kitchen_sensor_detection_range_3_4_m
+            name: 3–4 m
+          - entity: switch.kitchen_sensor_detection_range_4_5_m
+            name: 4–5 m
+          - entity: switch.kitchen_sensor_detection_range_5_6_m
+            name: 5–6 m
+      - type: entities
+        title: AI & Learning
+        entities:
+          - entity: switch.kitchen_sensor_ai_adaptive_sensitivity
+            name: AI Adaptive Sensitivity
+            icon: mdi:brain
+          - entity: switch.kitchen_sensor_ai_interference_source_self_identification
+            name: AI Interference Detection
+            icon: mdi:shield-check
+          - entity: button.kitchen_sensor_start_spatial_learning
+            name: Start Spatial Learning
+            icon: mdi:school
+
+  # ── VIEW 3: BATTERY ───────────────────────────────────────────
+  - title: Battery
+    path: battery
+    icon: mdi:battery
+    cards:
+      - type: custom:mushroom-title-card
+        title: Sensor Batteries
+        subtitle: Aqara FP300 sensors
+
+      - type: entities
+        title: FP300 Presence Sensors
+        entities:
+          - entity: sensor.office_sensor_battery
+            name: Office
+            icon: mdi:battery
+          - entity: sensor.living_room_sensor_battery
+            name: Living Room
+            icon: mdi:battery
+          - entity: sensor.bedroom_sensor_battery
+            name: Bedroom
+            icon: mdi:battery
+          - entity: sensor.hallway_sensor_battery
+            name: Hallway
+            icon: mdi:battery
+          - entity: sensor.guest_room_sensor_battery
+            name: Guest Room
+            icon: mdi:battery
+          - entity: sensor.kitchen_sensor_battery
+            name: Kitchen
+            icon: mdi:battery
+
+      - type: entities
+        title: Aqara Temp/Humidity Sensors
+        entities:
+          - entity: sensor.office_sensor_2_battery
+            name: Office
+            icon: mdi:battery
+          - entity: sensor.living_room_sensor_2_battery
+            name: Living Room
+            icon: mdi:battery
+          - entity: sensor.bedroom_sensor_2_battery
+            name: Bedroom
+            icon: mdi:battery

@@ -1,0 +1,852 @@
+- id: auto_bedtime_weekday
+  alias: Auto Bedtime (Weekdays 23:00)
+  description: Sends actionable notification at 23:00 on weekdays if office empty
+    and Apple TV not playing. Tap to trigger bedtime.
+  mode: single
+  trigger:
+  - platform: time
+    at: '23:00:00'
+  condition:
+  - condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - condition: state
+    entity_id: binary_sensor.office_sensor_presence
+    state: 'off'
+  - condition: state
+    entity_id: media_player.living_room_apple_tv
+    state: 'off'
+  - condition: state
+    entity_id: input_boolean.bedtime_active
+    state: 'off'
+  action:
+  - service: notify.mobile_app_joes_iphone
+    data:
+      title: Bedtime
+      message: Ready to start bedtime sequence?
+      data:
+        actions:
+        - action: START_BEDTIME
+          title: Start Bedtime
+        - action: SKIP_BEDTIME
+          title: Skip
+          destructive: true
+- id: auto_bedtime_response
+  alias: Auto Bedtime Response
+  description: Handle response to bedtime actionable notification
+  mode: single
+  trigger:
+  - platform: event
+    event_type: mobile_app_notification_action
+    event_data:
+      action: START_BEDTIME
+  condition:
+  - condition: state
+    entity_id: input_boolean.bedtime_active
+    state: 'off'
+  action:
+  - service: script.bedtime_sequence
+- id: auto_wakeup_weekday
+  alias: Auto Wakeup (Weekdays 07:00)
+  description: Automatically trigger wakeup sequence at 07:00 Mon-Fri if not already
+    triggered
+  trigger:
+  - platform: time
+    at: 07:00:00
+  condition:
+  - condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - condition: state
+    entity_id: input_boolean.wakeup_triggered_today
+    state: 'off'
+  action:
+  - service: script.wakeup_sequence
+- id: auto_evening
+  alias: Auto Evening (Sunset-1hr or 19:00)
+  description: Trigger evening lighting at sunset minus 1 hour or 19:00, whichever
+    comes first
+  trigger:
+  - platform: sun
+    event: sunset
+    offset: -01:00:00
+  - platform: time
+    at: '19:00:00'
+  condition:
+  - condition: state
+    entity_id: input_boolean.evening_triggered_today
+    state: 'off'
+  action:
+  - service: script.evening_sequence
+- id: hallway_daytime_weather
+  alias: Hallway Daytime Weather (Weekdays 08:40)
+  description: Hallway lights show weather color at 40%, then fade to deep blue 15%
+    by 10:00
+  trigger:
+  - platform: time
+    at: 08:40:00
+  condition:
+  - condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  action:
+  - variables:
+      weather_condition: '{{ states(''weather.forecast_home'') }}'
+      temp: '{{ state_attr(''weather.forecast_home'', ''temperature'') | float(20)
+        }}'
+      is_heavy_rain: '{{ weather_condition in [''pouring'', ''lightning-rainy'', ''lightning'',
+        ''hail''] }}'
+      is_rain: '{{ weather_condition in [''rainy'', ''pouring'', ''lightning-rainy'',
+        ''lightning'', ''hail''] }}'
+      is_cloudy: '{{ weather_condition in [''cloudy'', ''fog''] }}'
+      is_partly_cloudy: '{{ weather_condition == ''partlycloudy'' }}'
+      is_clear: '{{ weather_condition in [''sunny'', ''clear-night'', ''clear''] }}'
+      is_very_warm: '{{ temp > 28 }}'
+      weather_xy_x: '{% if is_heavy_rain %}0.1400 {% elif is_rain %}0.1535 {% elif
+        is_cloudy %}0.2700 {% elif is_very_warm and is_clear %}0.5900 {% elif is_clear
+        or is_partly_cloudy %}0.5268 {% else %}0.3500{% endif %}
+
+        '
+      weather_xy_y: '{% if is_heavy_rain %}0.0500 {% elif is_rain %}0.0596 {% elif
+        is_cloudy %}0.1800 {% elif is_very_warm and is_clear %}0.3800 {% elif is_clear
+        or is_partly_cloudy %}0.4133 {% else %}0.3000{% endif %}
+
+        '
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.hallway_spot_1
+      - light.hallway_spot_2
+      - light.hallway_spot_4_2
+      - light.hallway_spot_4
+    data:
+      brightness_pct: 40
+      xy_color:
+      - '{{ weather_xy_x | float }}'
+      - '{{ weather_xy_y | float }}'
+      transition: 60
+  - delay:
+      seconds: 60
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.hallway_spot_1
+      - light.hallway_spot_2
+      - light.hallway_spot_4_2
+      - light.hallway_spot_4
+    data:
+      brightness_pct: 15
+      xy_color:
+      - 0.153
+      - 0.058
+      transition: 4740
+- id: hallway_presence_brighten
+  alias: Hallway Presence Brighten
+  description: Brighten hallway lights on presence — daytime 2000K, evening amber,
+    night red-orange
+  mode: single
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.hallway_sensor_presence
+  action:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.hallway_sensor_presence
+        state: 'on'
+      sequence:
+      - service: scene.create
+        data:
+          scene_id: hallway_before_presence
+          snapshot_entities:
+          - light.hallway_spot_1
+          - light.hallway_spot_2
+          - light.hallway_spot_4_2
+          - light.hallway_spot_4
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: sun.sun
+            state: above_horizon
+          - condition: state
+            entity_id: input_boolean.bedtime_active
+            state: 'off'
+          - condition: state
+            entity_id: light.hallway
+            state: 'on'
+          sequence:
+          - service: light.turn_on
+            target:
+              entity_id:
+              - light.hallway_spot_1
+              - light.hallway_spot_2
+              - light.hallway_spot_4_2
+              - light.hallway_spot_4
+            data:
+              brightness_pct: '{{ [((state_attr(''light.hallway'', ''brightness'')
+                | int(0)) / 255 * 100 + 20) | round(0) | int, 100] | min }}
+
+                '
+              color_temp_kelvin: 2000
+              transition: 1
+        - conditions:
+          - condition: state
+            entity_id: sun.sun
+            state: below_horizon
+          - condition: state
+            entity_id: input_boolean.bedtime_active
+            state: 'off'
+          sequence:
+          - service: light.turn_on
+            target:
+              entity_id:
+              - light.hallway_spot_1
+              - light.hallway_spot_2
+              - light.hallway_spot_4_2
+              - light.hallway_spot_4
+            data:
+              brightness_pct: '{{ [((state_attr(''light.hallway'', ''brightness'')
+                | int(0)) / 255 * 100 + 20) | round(0) | int, 100] | min }}
+
+                '
+              hs_color:
+              - 30
+              - 90
+              transition: 1
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.bedtime_active
+            state: 'on'
+          sequence:
+          - service: light.turn_on
+            target:
+              entity_id:
+              - light.hallway_spot_1
+              - light.hallway_spot_2
+              - light.hallway_spot_4_2
+              - light.hallway_spot_4
+            data:
+              brightness_pct: '{{ [((state_attr(''light.hallway'', ''brightness'')
+                | int(0)) / 255 * 100 + 10) | round(0) | int, 100] | min }}
+
+                '
+              hs_color:
+              - 14
+              - 100
+              transition: 1
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.hallway_sensor_presence
+        state: 'off'
+      sequence:
+      - delay:
+          seconds: 2
+      - condition: state
+        entity_id: binary_sensor.hallway_sensor_presence
+        state: 'off'
+      - service: scene.turn_on
+        target:
+          entity_id: scene.hallway_before_presence
+        data:
+          transition: 1
+- id: zha_reload_on_startup
+  alias: Reload ZHA on Startup
+  description: Automatically reload ZHA 90s after HA starts to fix stale Zigbee sensor
+    states after power failures
+  trigger:
+  - platform: homeassistant
+    event: start
+  action:
+  - delay:
+      seconds: 90
+  - service: homeassistant.reload_config_entry
+    data:
+      entry_id: '{{ config_entries(''zha'') | first }}'
+- id: reset_daily_flags
+  alias: Reset Daily Flags at Midnight
+  description: Reset all daily trigger flags at midnight
+  trigger:
+  - platform: time
+    at: 00:00:00
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.wakeup_triggered_today
+      - input_boolean.wakeup_active
+      - input_boolean.bedtime_active
+      - input_boolean.evening_triggered_today
+- id: office_weather_preview
+  alias: Evening Weather Preview
+  description: Show weather colors on office lights when living room occupied and
+    office empty, starting 1 hour before sunset. Restores on office presence, living
+    room clear, or bedtime.
+  triggers:
+  - entity_id: binary_sensor.living_room_sensor_presence
+    to: 'on'
+    trigger: state
+  conditions:
+  - condition: sun
+    before: sunrise
+    after: sunset
+    after_offset: -01:00:00
+  - condition: state
+    entity_id: binary_sensor.office_sensor_presence
+    state: 'off'
+  - condition: state
+    entity_id: input_boolean.bedtime_active
+    state: 'off'
+  actions:
+  - data:
+      scene_id: office_before_weather_preview
+      snapshot_entities:
+      - light.office_cabinet_strip
+      - light.desk_lamp
+    action: scene.create
+  - variables:
+      weather_condition: '{{ states(''weather.forecast_home'') }}'
+      temp: '{{ state_attr(''weather.forecast_home'', ''temperature'') | float(20)
+        }}'
+      is_heavy_rain: '{{ weather_condition in [''pouring'', ''lightning-rainy'', ''lightning'',
+        ''hail''] }}'
+      is_rain: '{{ weather_condition in [''rainy'', ''pouring'', ''lightning-rainy'',
+        ''lightning'', ''hail''] }}'
+      is_cloudy: '{{ weather_condition in [''cloudy'', ''fog''] }}'
+      is_partly_cloudy: '{{ weather_condition == ''partlycloudy'' }}'
+      is_clear: '{{ weather_condition in [''sunny'', ''clear-night'', ''clear''] }}'
+      is_very_warm: '{{ temp > 28 }}'
+      weather_hs_h: '{% if is_heavy_rain %}265 {% elif is_rain %}260 {% elif is_cloudy
+        %}250 {% elif is_very_warm and is_clear %}20 {% elif is_clear %}30 {% elif
+        is_partly_cloudy %}40 {% else %}45{% endif %}
+
+        '
+      weather_hs_s: '{% if is_heavy_rain %}98 {% elif is_rain %}95 {% elif is_cloudy
+        %}70 {% elif is_very_warm and is_clear %}100 {% elif is_clear %}90 {% elif
+        is_partly_cloudy %}75 {% else %}60{% endif %}
+
+        '
+  - target:
+      entity_id: light.office_cabinet_strip
+    data:
+      brightness_pct: 5
+      hs_color:
+      - '{{ weather_hs_h | float }}'
+      - '{{ weather_hs_s | float }}'
+      transition: 5
+    action: light.turn_on
+  - target:
+      entity_id: light.desk_lamp
+    data:
+      brightness_pct: 20
+      hs_color:
+      - '{{ weather_hs_h | float }}'
+      - '{{ weather_hs_s | float }}'
+      transition: 5
+    action: light.turn_on
+  - wait_for_trigger:
+    - entity_id: binary_sensor.office_sensor_presence
+      to: 'on'
+      trigger: state
+    - entity_id: binary_sensor.living_room_sensor_presence
+      to: 'off'
+      trigger: state
+    - entity_id: input_boolean.bedtime_active
+      to: 'on'
+      trigger: state
+    timeout:
+      hours: 2
+    continue_on_timeout: true
+  - target:
+      entity_id: scene.office_before_weather_preview
+    data:
+      transition: 2
+    action: scene.turn_on
+  mode: restart
+- id: living_room_button_toggle_shade
+  alias: Living Room Button → Toggle Shade
+  description: When the living room Hue Smart Button is pressed, close the shade if
+    fully open, open if fully closed. Ignores press if shade is mid-position.
+  mode: single
+  trigger:
+  - platform: event
+    event_type: zha_event
+    event_data:
+      device_ieee: 00:17:88:01:08:03:c4:a3
+      command: on_short_release
+  condition:
+  - condition: or
+    conditions:
+    - condition: numeric_state
+      entity_id: cover.living_room_shade
+      attribute: current_position
+      above: 99
+    - condition: numeric_state
+      entity_id: cover.living_room_shade
+      attribute: current_position
+      below: 1
+  action:
+  - choose:
+    - conditions:
+      - condition: numeric_state
+        entity_id: cover.living_room_shade
+        attribute: current_position
+        above: 99
+      sequence:
+      - service: cover.close_cover
+        target:
+          entity_id: cover.living_room_shade
+    default:
+    - service: cover.open_cover
+      target:
+        entity_id: cover.living_room_shade
+- id: cabinet_temp_alert
+  alias: Server Temperature Alert
+  description: 'Pulse TV cabinet strip based on server cabinet and CPU temperature.
+    Cabinet: >30 green-yellow, >32 amber + ntfy, >35 deep red + ntfy. CPU: >80 amber
+    + ntfy, >90 deep red + ntfy. Highest severity wins. Restores light when all temps
+    normal. Suppressed when living room presence detected. Notifications require sustained
+    temp (5 min for warning, 2 min for critical) and have 30 min cooldown per severity.
+
+    '
+  mode: restart
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.server_cabinet_sensor_temperature
+    above: 30
+    for:
+      minutes: 5
+    id: cab_info
+  - platform: numeric_state
+    entity_id: sensor.server_cabinet_sensor_temperature
+    above: 32
+    for:
+      minutes: 5
+    id: cab_warn
+  - platform: numeric_state
+    entity_id: sensor.server_cabinet_sensor_temperature
+    above: 35
+    for:
+      minutes: 2
+    id: cab_crit
+  - platform: numeric_state
+    entity_id: sensor.system_monitor_processor_temperature
+    above: 80
+    for:
+      minutes: 5
+    id: cpu_warn
+  - platform: numeric_state
+    entity_id: sensor.system_monitor_processor_temperature
+    above: 90
+    for:
+      minutes: 2
+    id: cpu_crit
+  - platform: numeric_state
+    entity_id: sensor.server_cabinet_sensor_temperature
+    below: 30
+    id: cab_clear
+  - platform: numeric_state
+    entity_id: sensor.system_monitor_processor_temperature
+    below: 80
+    id: cpu_clear
+  - platform: state
+    entity_id: input_boolean.cabinet_temp_alert_suppressed
+    to: 'off'
+    id: suppression_cleared
+  action:
+  - variables:
+      cab_temp: '{{ states(''sensor.server_cabinet_sensor_temperature'') | float(20)
+        }}'
+      cpu_temp: '{{ states(''sensor.system_monitor_processor_temperature'') | float(40)
+        }}'
+      any_alert: '{{ cab_temp > 30 or cpu_temp > 80 }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ not any_alert }}'
+      sequence:
+      - service: scene.turn_on
+        target:
+          entity_id: scene.tv_cabinet_before_temp_alert
+        data:
+          transition: 2
+    default:
+    - if:
+      - condition: template
+        value_template: '{% if trigger.id == ''cab_info'' %}{{ cpu_temp <= 80 }} {%
+          elif trigger.id == ''cpu_warn'' %}{{ cab_temp <= 30 }} {% else %}false{%
+          endif %}'
+      then:
+      - service: scene.create
+        data:
+          scene_id: tv_cabinet_before_temp_alert
+          snapshot_entities:
+          - light.tv_cabinet_strip
+    - if:
+      - condition: trigger
+        id:
+        - cab_warn
+        - cab_crit
+        - cpu_warn
+        - cpu_crit
+      then:
+      - variables:
+          is_critical: '{{ trigger.id in [''cab_crit'', ''cpu_crit''] }}'
+      - if:
+        - condition: template
+          value_template: "{% set is_crit = trigger.id in ['cab_crit', 'cpu_crit']
+            %} {% if is_crit %}\n  true\n{% else %}\n  {{ (as_timestamp(now()) - as_timestamp(states('input_datetime.last_temp_warning_ntfy'),
+            0)) > 1800 }}\n{% endif %}\n"
+        then:
+        - service: notify.ntfy
+          data:
+            title: '{% if trigger.id in [''cab_crit'', ''cpu_crit''] %}Server CRITICAL{%
+              else %}Server Warning{% endif %}'
+            message: '{% if trigger.id == ''cab_warn'' %}Cabinet temperature {{ cab_temp
+              }}°C (threshold: 32°C) {% elif trigger.id == ''cab_crit'' %}Cabinet
+              temperature {{ cab_temp }}°C (threshold: 35°C) {% elif trigger.id ==
+              ''cpu_warn'' %}CPU temperature {{ cpu_temp }}°C (threshold: 80°C) {%
+              elif trigger.id == ''cpu_crit'' %}CPU temperature {{ cpu_temp }}°C (threshold:
+              90°C) {% endif %}'
+        - service: input_datetime.set_datetime
+          target:
+            entity_id: "{% if trigger.id in ['cab_crit', 'cpu_crit'] %}\n  input_datetime.last_temp_critical_ntfy\n{%
+              else %}\n  input_datetime.last_temp_warning_ntfy\n{% endif %}\n"
+          data:
+            datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+    - repeat:
+        while:
+        - condition: template
+          value_template: "{{ (states('sensor.server_cabinet_sensor_temperature')
+            | float(20) > 30\n   or states('sensor.system_monitor_processor_temperature')
+            | float(40) > 80)\n   and not is_state('input_boolean.cabinet_temp_alert_suppressed',
+            'on') }}"
+        sequence:
+        - variables:
+            cab: '{{ states(''sensor.server_cabinet_sensor_temperature'') | float(20)
+              }}'
+            cpu: '{{ states(''sensor.system_monitor_processor_temperature'') | float(40)
+              }}'
+            cab_level: '{% if cab > 35 %}3{% elif cab > 32 %}2{% elif cab > 30 %}1{%
+              else %}0{% endif %}'
+            cpu_level: '{% if cpu > 90 %}3{% elif cpu > 80 %}2{% else %}0{% endif
+              %}'
+            level: '{{ [cab_level | int, cpu_level | int] | max }}'
+            pulse_h: '{% if level == 3 %}0{% elif level == 2 %}30{% else %}75{% endif
+              %}'
+            pulse_s: '{% if level == 3 %}100{% elif level == 2 %}90{% else %}80{%
+              endif %}'
+        - service: light.turn_on
+          target:
+            entity_id: light.tv_cabinet_strip
+          data:
+            brightness_pct: 80
+            hs_color:
+            - '{{ pulse_h | float }}'
+            - '{{ pulse_s | float }}'
+            transition: 2
+        - delay:
+            seconds: 2
+        - service: light.turn_on
+          target:
+            entity_id: light.tv_cabinet_strip
+          data:
+            brightness_pct: 10
+            hs_color:
+            - '{{ pulse_h | float }}'
+            - '{{ pulse_s | float }}'
+            transition: 2
+        - delay:
+            seconds: 2
+    - service: scene.turn_on
+      target:
+        entity_id: scene.tv_cabinet_before_temp_alert
+      data:
+        transition: 2
+- id: cabinet_alert_living_room_suppress
+  alias: Cabinet Alert Living Room Suppress
+  description: 'Suppresses cabinet temp alert pulsing when someone is in the living
+    room. Activates after 1 minute of living room presence (sets cabinet_temp_alert_suppressed
+    on). Deactivates after 5 minutes of no living room presence (sets it off, which
+    re-triggers cabinet_temp_alert to resume pulsing if temps are still high).
+
+    '
+  mode: restart
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.living_room_sensor_presence
+    to: 'on'
+    for:
+      minutes: 1
+    id: presence_on
+  - platform: state
+    entity_id: binary_sensor.living_room_sensor_presence
+    to: 'off'
+    for:
+      minutes: 5
+    id: presence_off
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: presence_on
+      sequence:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.cabinet_temp_alert_suppressed
+    - conditions:
+      - condition: trigger
+        id: presence_off
+      sequence:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.cabinet_temp_alert_suppressed
+- id: office_night_presence
+  alias: Office Night Presence Lights
+  description: 'On presence after 18:00: snapshot current desk lamp & cabinet strip
+    state, then set desk lamp (100% warm amber) and cabinet strip (50% warm amber).
+    On 1 min no presence: restore previous state.'
+  mode: single
+  trigger:
+  - id: presence_on
+    platform: state
+    entity_id: binary_sensor.office_sensor_presence
+    to: 'on'
+  - id: presence_off
+    platform: state
+    entity_id: binary_sensor.office_sensor_presence
+    to: 'off'
+    for:
+      minutes: 1
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: presence_on
+      - condition: time
+        after: '18:00:00'
+      sequence:
+      - service: scene.create
+        data:
+          scene_id: office_before_night_presence
+          snapshot_entities:
+          - light.desk_lamp
+          - light.office_cabinet_strip
+          - light.office_light
+      - service: light.turn_on
+        target:
+          entity_id: light.desk_lamp
+        data:
+          brightness: 254
+          xy_color:
+          - 0.5573
+          - 0.3991
+          transition: 2
+      - service: light.turn_on
+        target:
+          entity_id: light.office_cabinet_strip
+        data:
+          brightness: 128
+          xy_color:
+          - 0.5576
+          - 0.3991
+          transition: 2
+    - conditions:
+      - condition: trigger
+        id: presence_off
+      sequence:
+      - service: scene.turn_on
+        target:
+          entity_id: scene.office_before_night_presence
+        data:
+          transition: 2
+- id: bedroom_night_presence_boost
+  alias: Bedroom Night Presence Boost
+  description: 'On presence after 18:00 (before bedtime): boost bedside lamps +25%
+    and underbed lights +40%. Restore on presence cleared or after 3 min. Does not
+    re-trigger until presence fully clears.'
+  triggers:
+  - platform: state
+    entity_id: binary_sensor.bedroom_sensor_presence
+    to: 'on'
+  conditions:
+  - condition: time
+    after: '18:00:00'
+  - condition: state
+    entity_id: input_boolean.bedtime_active
+    state: 'off'
+  actions:
+  - data:
+      scene_id: bedroom_before_presence_boost
+      snapshot_entities:
+      - light.master_bedside_lamp_1
+      - light.master_bedside_lamp_2
+      - light.underbed_1
+      - light.underbed_2
+    action: scene.create
+  - target:
+      entity_id:
+      - light.master_bedside_lamp_1
+      - light.master_bedside_lamp_2
+    data:
+      brightness_step_pct: 25
+      transition: 1
+    action: light.turn_on
+  - target:
+      entity_id:
+      - light.underbed_1
+      - light.underbed_2
+    data:
+      brightness_step_pct: 40
+      transition: 1
+    action: light.turn_on
+  - wait_for_trigger:
+    - platform: state
+      entity_id: binary_sensor.bedroom_sensor_presence
+      to: 'off'
+    timeout:
+      minutes: 3
+    continue_on_timeout: true
+  - target:
+      entity_id: scene.bedroom_before_presence_boost
+    data:
+      transition: 1
+    action: scene.turn_on
+  - if:
+    - condition: state
+      entity_id: binary_sensor.bedroom_sensor_presence
+      state: 'on'
+    then:
+    - wait_for_trigger:
+      - platform: state
+        entity_id: binary_sensor.bedroom_sensor_presence
+        to: 'off'
+  mode: single
+- id: bedroom_blinds_evening_close
+  alias: Bedroom Blinds Evening Close
+  description: Close bedroom blinds 2h after sunset or at 21:00, whichever first.
+  mode: single
+  trigger:
+  - platform: sun
+    event: sunset
+    offset: +02:00:00
+  - platform: time
+    at: '21:00:00'
+  condition:
+  - condition: state
+    entity_id: cover.bedroom_blinds
+    state: open
+  action:
+  - service: cover.close_cover
+    target:
+      entity_id: cover.bedroom_blinds
+- id: bedroom_blinds_presence
+  alias: Bedroom Blinds Presence Close
+  description: Close bedroom blinds on 1min+ presence after 12:00. Reopen after 30min
+    no presence (only before 21:00).
+  mode: single
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.bedroom_sensor_presence
+    to: 'on'
+    for:
+      minutes: 1
+  condition:
+  - condition: time
+    after: '12:00:00'
+  - condition: state
+    entity_id: cover.bedroom_blinds
+    state: open
+  action:
+  - service: cover.close_cover
+    target:
+      entity_id: cover.bedroom_blinds
+  - wait_for_trigger:
+    - platform: state
+      entity_id: binary_sensor.bedroom_sensor_presence
+      to: 'off'
+      for:
+        minutes: 30
+  - condition: time
+    before: '21:00:00'
+  - service: cover.open_cover
+    target:
+      entity_id: cover.bedroom_blinds
+- id: cabinet_fan_auto_control
+  alias: Cabinet Fan Auto Control
+  description: 'Adjusts cabinet fan speed every 2 minutes based on cabinet and CPU
+    temps. Seeks equilibrium by stepping ±10% toward the calculated target speed.
+    Cabinet target 30°C (max 35°C), CPU target 70°C (max 85°C). Critical spike (cab
+    >35°C or CPU >85°C) jumps to 100% immediately. Disabled when input_boolean.cabinet_fan_auto
+    is off (manual mode).
+
+    '
+  mode: restart
+  trigger:
+  - platform: time_pattern
+    minutes: /2
+  - platform: numeric_state
+    entity_id: sensor.server_cabinet_sensor_temperature
+    above: 35
+    id: cab_crit
+  - platform: numeric_state
+    entity_id: sensor.system_monitor_processor_temperature
+    above: 85
+    id: cpu_crit
+  condition:
+  - condition: state
+    entity_id: input_boolean.cabinet_fan_auto
+    state: 'on'
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - cab_crit
+        - cpu_crit
+      sequence:
+      - service: fan.set_percentage
+        target:
+          entity_id: fan.server_cabinet_fan_cabinet_fan
+        data:
+          percentage: 100
+    default:
+    - variables:
+        cab_temp: '{{ states(''sensor.server_cabinet_sensor_temperature'') | float(20)
+          }}'
+        cpu_temp: '{{ states(''sensor.system_monitor_processor_temperature'') | float(40)
+          }}'
+        cab_overshoot: '{{ [[((cab_temp - 30) / 5), 0] | max, 1] | min }}'
+        cpu_overshoot: '{{ [[((cpu_temp - 70) / 15), 0] | max, 1] | min }}'
+        worst: '{{ [cab_overshoot, cpu_overshoot] | max }}'
+        target_pct: '{{ (worst * 100) | round(-1) | int }}'
+        current_pct: '{{ state_attr(''fan.server_cabinet_fan_cabinet_fan'', ''percentage'')
+          | int(0) }}'
+    - variables:
+        step_pct: '{{ [[target_pct - current_pct, -10] | max, 10] | min }}'
+        new_pct: '{{ [[current_pct + step_pct, 0] | max, 100] | min }}'
+    - if:
+      - condition: template
+        value_template: '{{ new_pct == 0 }}'
+      then:
+      - service: fan.turn_off
+        target:
+          entity_id: fan.server_cabinet_fan_cabinet_fan
+      else:
+      - service: fan.set_percentage
+        target:
+          entity_id: fan.server_cabinet_fan_cabinet_fan
+        data:
+          percentage: '{{ new_pct }}'

@@ -1,0 +1,852 @@
+# Bedtime sequence script
+bedtime_sequence:
+  alias: Bedtime Sequence
+  icon: mdi:weather-night
+  mode: single
+  sequence:
+    # Mark bedtime as active
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.bedtime_active
+
+    # Weather color — richer scale based on conditions and temperature
+    # Heavy rain/storms → deep blue-violet, Rain → blue-violet,
+    # Cloudy → soft lavender, Partly cloudy → muted amber,
+    # Clear → standard amber, Very warm + clear (>28°C) → rich bright orange
+    - variables:
+        weather_condition: "{{ states('weather.forecast_home') }}"
+        temp: "{{ state_attr('weather.forecast_home', 'temperature') | float(20) }}"
+        is_heavy_rain: "{{ weather_condition in ['pouring', 'lightning-rainy', 'lightning', 'hail'] }}"
+        is_rain: "{{ weather_condition in ['rainy', 'pouring', 'lightning-rainy', 'lightning', 'hail'] }}"
+        is_cloudy: "{{ weather_condition in ['cloudy', 'fog'] }}"
+        is_partly_cloudy: "{{ weather_condition == 'partlycloudy' }}"
+        is_clear: "{{ weather_condition in ['sunny', 'clear-night', 'clear'] }}"
+        is_very_warm: "{{ temp > 28 }}"
+        weather_xy_x: >
+          {% if is_heavy_rain %}0.1400
+          {% elif is_rain %}0.1535
+          {% elif is_cloudy %}0.2700
+          {% elif is_very_warm and is_clear %}0.5900
+          {% elif is_clear or is_partly_cloudy %}0.5268
+          {% else %}0.3500{% endif %}
+        weather_xy_y: >
+          {% if is_heavy_rain %}0.0500
+          {% elif is_rain %}0.0596
+          {% elif is_cloudy %}0.1800
+          {% elif is_very_warm and is_clear %}0.3800
+          {% elif is_clear or is_partly_cloudy %}0.4133
+          {% else %}0.3000{% endif %}
+        weather_hs_h: >
+          {% if is_heavy_rain %}265
+          {% elif is_rain %}260
+          {% elif is_cloudy %}250
+          {% elif is_very_warm and is_clear %}20
+          {% elif is_clear %}30
+          {% elif is_partly_cloudy %}40
+          {% else %}45{% endif %}
+        weather_hs_s: >
+          {% if is_heavy_rain %}98
+          {% elif is_rain %}95
+          {% elif is_cloudy %}70
+          {% elif is_very_warm and is_clear %}100
+          {% elif is_clear %}90
+          {% elif is_partly_cloudy %}75
+          {% else %}60{% endif %}
+
+    # Close living room, office, and dining room shades
+    - service: cover.close_cover
+      target:
+        entity_id:
+          - cover.living_room_shade
+          - cover.office_shade
+          - cover.dinning_room_shade
+
+    # Turn off Apple TV if on or playing
+    - if:
+        - condition: template
+          value_template: >
+            {{ states("media_player.living_room_apple_tv") not in ["off", "unavailable", "unknown"] }}
+      then:
+        - service: media_player.turn_off
+          target:
+            entity_id: media_player.living_room_apple_tv
+
+    # Phase 1: All rooms start simultaneously
+    # Bedroom underbed lights -> jump to 80% weather color instantly
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.underbed_1
+          - light.underbed_2
+      data:
+        brightness_pct: 80
+        hs_color:
+          - "{{ weather_hs_h | float }}"
+          - "{{ weather_hs_s | float }}"
+        transition: 1
+
+    # Office (room group) -> fade to 1% over 2 min then OFF
+    - service: light.turn_on
+      target:
+        entity_id: light.office
+      data:
+        brightness_pct: 1
+        transition: 120
+
+    # Desk Lamp -> fade to red at 2% over 2 min, stays on
+    - service: light.turn_on
+      target:
+        entity_id: light.desk_lamp
+      data:
+        brightness_pct: 2
+        xy_color: [0.6725, 0.3230]
+        transition: 120
+
+    # Living Room -> fade to red at 2% over 3 min, stays on
+    - service: light.turn_on
+      target:
+        entity_id: light.living_room
+      data:
+        brightness_pct: 2
+        xy_color: [0.6725, 0.3230]
+        transition: 180
+
+    # Dining Room Plant Light -> fade to red at 5% over 3 min, stays on
+    - service: light.turn_on
+      target:
+        entity_id: light.dinning_room_plant_light
+      data:
+        brightness_pct: 5
+        xy_color: [0.6725, 0.3230]
+        transition: 180
+
+    # Guest Room -> fade to red at 2% over 3 min, stays on
+    - service: light.turn_on
+      target:
+        entity_id: light.guest_room_back_lamp
+      data:
+        brightness_pct: 2
+        xy_color: [0.6725, 0.3230]
+        transition: 180
+
+    # Bedroom -> fade to 5% with weather color over 5 min
+    - service: light.turn_on
+      target:
+        entity_id: light.bedroom
+      data:
+        brightness_pct: 5
+        xy_color:
+          - "{{ weather_xy_x | float }}"
+          - "{{ weather_xy_y | float }}"
+        transition: 300
+
+    # Hallway spots -> come UP to 10% with weather color
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.hallway_spot_1
+          - light.hallway_spot_2
+          - light.hallway_spot_4_2
+          - light.hallway_spot_4
+      data:
+        brightness_pct: 10
+        xy_color:
+          - "{{ weather_xy_x | float }}"
+          - "{{ weather_xy_y | float }}"
+        transition: 2
+
+    # Bedside lamps -> fade to very deep amber at 30% over 2 min
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.moes_matter_light
+          - light.moes_matter_light_2
+      data:
+        brightness_pct: 30
+        xy_color: [0.5800, 0.3800]
+        transition: 120
+
+    # Underbed phase 1: fade brightness from 80% to 35% over 5 min, staying on weather color
+    - delay:
+        seconds: 2
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.underbed_1
+          - light.underbed_2
+      data:
+        brightness_pct: 35
+        transition: 300
+
+    # Turn off office (room group) after 2 min fade completes
+    # Start bedside lamps fade to 1% very deep amber over 8 min
+    # Note: desk_lamp, living_room, and dinning_room_plant_light stay on at dim red
+    - delay:
+        seconds: 118
+    - service: light.turn_off
+      target:
+        entity_id: light.office
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.moes_matter_light
+          - light.moes_matter_light_2
+      data:
+        brightness_pct: 1
+        xy_color: [0.5800, 0.3800]
+        transition: 480
+
+    # Phase 2: Hallway cascade (wait 1 more min so hallways hold at 10% for ~3 min total)
+    - delay:
+        seconds: 60
+
+    # Hallway Spot 1 -> fade to 1% over 2 min
+    - service: light.turn_on
+      target:
+        entity_id: light.hallway_spot_1
+      data:
+        brightness_pct: 1
+        transition: 120
+
+    # Hallway Spot 2 starts 15s later
+    - delay:
+        seconds: 15
+    - service: light.turn_on
+      target:
+        entity_id: light.hallway_spot_2
+      data:
+        brightness_pct: 1
+        transition: 120
+
+    # Hallway Spot 4 starts 15s later
+    - delay:
+        seconds: 15
+    - service: light.turn_on
+      target:
+        entity_id: light.hallway_spot_4
+      data:
+        brightness_pct: 1
+        transition: 120
+
+    # Hallway Spot 3 starts 15s later (closest to bedroom, last to fade)
+    - delay:
+        seconds: 15
+    - service: light.turn_on
+      target:
+        entity_id: light.hallway_spot_4_2
+      data:
+        brightness_pct: 1
+        transition: 120
+
+    # Underbed phase 2: shift to deep amber at 15% over 1 min (weather color -> amber)
+    - delay:
+        seconds: 77
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.underbed_1
+          - light.underbed_2
+      data:
+        brightness_pct: 15
+        hs_color: [30, 90]
+        transition: 60
+
+    # Wait for last hallway light to finish fading (~43s remaining)
+    - delay:
+        seconds: 43
+
+    # Underbed phase 3: fade to off over 10 min (off at ~t=962s)
+    - delay:
+        seconds: 17
+    - service: light.turn_off
+      target:
+        entity_id:
+          - light.underbed_1
+          - light.underbed_2
+      data:
+        transition: 600
+
+    # Hold hallways at 1% for remaining ~2m43s
+    - delay:
+        seconds: 163
+
+    # Turn off all hallway lights
+    - service: light.turn_off
+      target:
+        entity_id:
+          - light.hallway_spot_1
+          - light.hallway_spot_2
+          - light.hallway_spot_4_2
+          - light.hallway_spot_4
+
+    # Bedside lamps reached 1% at t=600s, hold for 1 min then off
+    - delay:
+        seconds: 135
+    - service: light.turn_off
+      target:
+        entity_id:
+          - light.moes_matter_light
+          - light.moes_matter_light_2
+
+# Evening sequence script
+evening_sequence:
+  alias: Evening Sequence
+  icon: mdi:weather-sunset-down
+  mode: single
+  sequence:
+    # Mark evening as triggered
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.evening_triggered_today
+
+    # === OFFICE ===
+    # Office light: fade to deep red at 1% over 5 min, then turn off
+    - service: light.turn_on
+      target:
+        entity_id: light.office_light
+      data:
+        brightness_pct: 1
+        xy_color: [0.6725, 0.3230]
+        transition: 300
+
+    # Desk lamp: deep amber at 85% over 5 min
+    - service: light.turn_on
+      target:
+        entity_id: light.desk_lamp
+      data:
+        brightness_pct: 85
+        xy_color: [0.5573, 0.3991]
+        transition: 300
+
+    # Cabinet strip: deep amber at 10% over 2 min
+    - service: light.turn_on
+      target:
+        entity_id: light.office_cabinet_strip
+      data:
+        brightness_pct: 10
+        xy_color: [0.5573, 0.3991]
+        transition: 120
+
+    # === LIVING ROOM ===
+    # TV cabinet: slightly deeper amber at 50% over 2 min
+    - service: light.turn_on
+      target:
+        entity_id: light.tv_cabinet_strip
+      data:
+        brightness_pct: 50
+        xy_color: [0.5800, 0.3800]
+        transition: 120
+
+    # TV lights: deep amber at 30% over 2 min
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.tv_light_1
+          - light.tv_light_2
+      data:
+        brightness_pct: 30
+        xy_color: [0.5573, 0.3991]
+        transition: 120
+
+    # === DINING ROOM ===
+    # Plant light: deep red-orange at 80% over 2 min
+    - service: light.turn_on
+      target:
+        entity_id: light.dinning_room_plant_light
+      data:
+        brightness_pct: 80
+        xy_color: [0.6300, 0.3500]
+        transition: 120
+
+    # === HALLWAY ===
+    # All hallway lights: deep red-orange at 10% over 5 min
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.hallway_spot_1
+          - light.hallway_spot_2
+          - light.hallway_spot_4_2
+          - light.hallway_spot_4
+      data:
+        brightness_pct: 10
+        xy_color: [0.6300, 0.3500]
+        transition: 300
+
+    # === MASTER BEDROOM ===
+    # Underbed strips: deep amber at 50% over 5 min
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.underbed_1
+          - light.underbed_2
+      data:
+        brightness_pct: 50
+        hs_color: [30, 90]
+        transition: 300
+
+    # Bedside lamps: deep amber at 25% over 2 min
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.moes_matter_light
+          - light.moes_matter_light_2
+      data:
+        brightness_pct: 25
+        xy_color: [0.5573, 0.3991]
+        transition: 120
+
+    # === GUEST ROOM ===
+    # Guest room lamp: amber at 40% over 2 min
+    - service: light.turn_on
+      target:
+        entity_id: light.guest_room_back_lamp
+      data:
+        brightness_pct: 40
+        xy_color: [0.5268, 0.4133]
+        transition: 120
+
+    # Turn off office light after 5-min fade completes
+    - delay:
+        seconds: 300
+    - service: light.turn_off
+      target:
+        entity_id: light.office_light
+
+# Wakeup sunrise sequence script
+wakeup_sequence:
+  alias: Wakeup Sequence
+  icon: mdi:weather-sunset-up
+  mode: single
+  sequence:
+    # Mark wakeup as active, bedtime as inactive
+    - service: input_boolean.turn_on
+      target:
+        entity_id:
+          - input_boolean.wakeup_active
+          - input_boolean.wakeup_triggered_today
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.bedtime_active
+
+    # === BEDROOM: Exponential fade-on (5 min) ===
+
+    # t=0s: Bedside lamps — 1% deep red-orange (instant)
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.moes_matter_light
+          - light.moes_matter_light_2
+      data:
+        brightness_pct: 1
+        hs_color: [14, 100]
+        transition: 1
+
+    # t=0s: Underbed lights — 1% deep red (instant)
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.underbed_1
+          - light.underbed_2
+      data:
+        brightness_pct: 1
+        hs_color: [10, 100]
+        transition: 1
+
+    # t=0s: Dining room matter bulbs — 1% deep red (instant)
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.moes_matter_light_3
+          - light.moes_matter_light_4
+          - light.moes_matter_light_5
+          - light.moes_matter_light_6
+          - light.moes_matter_light_7
+          - light.moes_matter_light_8
+      data:
+        brightness_pct: 1
+        hs_color: [0, 100]
+        transition: 1
+
+    # t=0s: Dining room plant light — 1% deep red (instant)
+    - service: light.turn_on
+      target:
+        entity_id: light.dinning_room_plant_light
+      data:
+        brightness_pct: 1
+        hs_color: [0, 100]
+        transition: 1
+
+    # t=0s: Guest room — 1% deep red (instant)
+    - service: light.turn_on
+      target:
+        entity_id: light.guest_room_back_lamp
+      data:
+        brightness_pct: 1
+        hs_color: [0, 100]
+        transition: 1
+
+    # t=0s: Living room TV cabinet — 1% deep red (instant)
+    - service: light.turn_on
+      target:
+        entity_id: light.tv_cabinet_strip
+      data:
+        brightness_pct: 1
+        hs_color: [0, 100]
+        transition: 1
+
+    # t=0s: Living room TV lights — 1% deep red (instant)
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.tv_light_1
+          - light.tv_light_2
+      data:
+        brightness_pct: 1
+        hs_color: [0, 100]
+        transition: 1
+
+    # t=0s: Office lights — 1% deep red (instant)
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.office_light
+          - light.office_cabinet_strip
+          - light.desk_lamp
+      data:
+        brightness_pct: 1
+        hs_color: [0, 100]
+        transition: 1
+
+    # t=2s: Bedside -> 2%, underbed -> 3%, dining room fades start (60s fade)
+    - delay:
+        seconds: 2
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.moes_matter_light
+          - light.moes_matter_light_2
+      data:
+        brightness_pct: 2
+        hs_color: [14, 100]
+        transition: 60
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.underbed_1
+          - light.underbed_2
+      data:
+        brightness_pct: 3
+        hs_color: [10, 100]
+        transition: 60
+
+    # t=2s: Dining room matter bulbs -> 3% orange over 10 min
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.moes_matter_light_3
+          - light.moes_matter_light_4
+          - light.moes_matter_light_5
+          - light.moes_matter_light_6
+          - light.moes_matter_light_7
+          - light.moes_matter_light_8
+      data:
+        brightness_pct: 3
+        hs_color: [24, 100]
+        transition: 600
+
+    # t=2s: Dining room plant light -> 60% 2000K over 10 min
+    - service: light.turn_on
+      target:
+        entity_id: light.dinning_room_plant_light
+      data:
+        brightness_pct: 60
+        color_temp_kelvin: 2000
+        transition: 600
+
+    # t=2s: Guest room -> 20% 2000K over 10 min
+    - service: light.turn_on
+      target:
+        entity_id: light.guest_room_back_lamp
+      data:
+        brightness_pct: 20
+        color_temp_kelvin: 2000
+        transition: 600
+
+    # t=2s: Living room TV cabinet -> 40% 2000K over 15 min
+    - service: light.turn_on
+      target:
+        entity_id: light.tv_cabinet_strip
+      data:
+        brightness_pct: 40
+        color_temp_kelvin: 2000
+        transition: 900
+
+    # t=2s: Living room TV lights -> 30% amber over 15 min
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.tv_light_1
+          - light.tv_light_2
+      data:
+        brightness_pct: 30
+        hs_color: [30, 90]
+        transition: 900
+
+    # t=1m 2s: Bedside -> 4%, underbed -> 8% (60s fade)
+    - delay:
+        seconds: 60
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.moes_matter_light
+          - light.moes_matter_light_2
+      data:
+        brightness_pct: 4
+        hs_color: [14, 100]
+        transition: 60
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.underbed_1
+          - light.underbed_2
+      data:
+        brightness_pct: 8
+        hs_color: [10, 100]
+        transition: 60
+
+    # t=2m 2s: Bedside -> 8% orange, underbed -> 15% 2000K (60s fade, color shift)
+    - delay:
+        seconds: 60
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.moes_matter_light
+          - light.moes_matter_light_2
+      data:
+        brightness_pct: 8
+        hs_color: [24.09, 100]
+        transition: 60
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.underbed_1
+          - light.underbed_2
+      data:
+        brightness_pct: 15
+        color_temp_kelvin: 2000
+        transition: 60
+
+    # t=3m 2s: Bedside -> 14%, underbed -> 25% (60s fade)
+    - delay:
+        seconds: 60
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.moes_matter_light
+          - light.moes_matter_light_2
+      data:
+        brightness_pct: 14
+        hs_color: [24.09, 100]
+        transition: 60
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.underbed_1
+          - light.underbed_2
+      data:
+        brightness_pct: 25
+        color_temp_kelvin: 2000
+        transition: 60
+
+    # t=4m 2s: Bedside -> 20%, underbed -> 40% (60s fade, targets reached at 5m 2s)
+    - delay:
+        seconds: 60
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.moes_matter_light
+          - light.moes_matter_light_2
+      data:
+        brightness_pct: 20
+        hs_color: [24.09, 100]
+        transition: 60
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.underbed_1
+          - light.underbed_2
+      data:
+        brightness_pct: 40
+        color_temp_kelvin: 2000
+        transition: 60
+
+    # === BEDROOM BLINDS: Open at t=5m ===
+
+    - delay:
+        seconds: 58
+
+    # t=5m 0s: Open bedroom blinds
+    - service: cover.open_cover
+      target:
+        entity_id: cover.bedroom_blinds
+
+    # === OFFICE: Fades start at t=5m ===
+
+    # t=5m 0s: Desk lamp -> 70% 2700K over 15 min
+    - service: light.turn_on
+      target:
+        entity_id: light.desk_lamp
+      data:
+        brightness_pct: 70
+        color_temp_kelvin: 2700
+        transition: 900
+
+    # t=5m 0s: Cabinet strip -> 20% 2200K over 30 min
+    - service: light.turn_on
+      target:
+        entity_id: light.office_cabinet_strip
+      data:
+        brightness_pct: 20
+        color_temp_kelvin: 2200
+        transition: 1800
+
+    # t=5m 0s: Office light -> 40% 2000K over 15 min
+    - service: light.turn_on
+      target:
+        entity_id: light.office_light
+      data:
+        brightness_pct: 40
+        color_temp_kelvin: 2000
+        transition: 900
+
+    # === HALLWAY: Cascade from bedroom outward, 1 min apart ===
+
+    # Spot 3 (closest to bedroom) — 1% red-orange instant
+    - delay:
+        seconds: 2
+    - service: light.turn_on
+      target:
+        entity_id: light.hallway_spot_4_2
+      data:
+        brightness_pct: 1
+        hs_color: [14, 100]
+        transition: 1
+    - delay:
+        seconds: 2
+    # Spot 3 -> 15% amber over 15 min
+    - service: light.turn_on
+      target:
+        entity_id: light.hallway_spot_4_2
+      data:
+        brightness_pct: 15
+        hs_color: [30, 90]
+        transition: 900
+
+    # Spot 4 — 1 min later
+    - delay:
+        seconds: 60
+    - service: light.turn_on
+      target:
+        entity_id: light.hallway_spot_4
+      data:
+        brightness_pct: 1
+        hs_color: [14, 100]
+        transition: 1
+    - delay:
+        seconds: 2
+    - service: light.turn_on
+      target:
+        entity_id: light.hallway_spot_4
+      data:
+        brightness_pct: 15
+        hs_color: [30, 90]
+        transition: 900
+
+    # Spot 1 — 1 min later
+    - delay:
+        seconds: 60
+    - service: light.turn_on
+      target:
+        entity_id: light.hallway_spot_1
+      data:
+        brightness_pct: 1
+        hs_color: [14, 100]
+        transition: 1
+    - delay:
+        seconds: 2
+    - service: light.turn_on
+      target:
+        entity_id: light.hallway_spot_1
+      data:
+        brightness_pct: 15
+        hs_color: [30, 90]
+        transition: 900
+
+    # Spot 2 (furthest from bedroom) — 1 min later
+    - delay:
+        seconds: 60
+    - service: light.turn_on
+      target:
+        entity_id: light.hallway_spot_2
+      data:
+        brightness_pct: 1
+        hs_color: [14, 100]
+        transition: 1
+    - delay:
+        seconds: 2
+    - service: light.turn_on
+      target:
+        entity_id: light.hallway_spot_2
+      data:
+        brightness_pct: 15
+        hs_color: [30, 90]
+        transition: 900
+
+    # === REMAINING SHADES: Open at t=10m ===
+    # Currently at ~t=8m 10s, need to wait ~1m 50s
+    - delay:
+        seconds: 110
+
+    # t=10m 0s: Open office, living room, dining room shades (if not already open)
+    - service: cover.open_cover
+      target:
+        entity_id:
+          - cover.office_shade
+          - cover.living_room_shade
+          - cover.dinning_room_shade
+
+    # === OFFICE PHASE 2: Fade down after 30m from office start ===
+    # Office started at t=5m, phase 2 at t=35m
+    # Currently at ~t=10m, need to wait ~25m
+    - delay:
+        seconds: 1500
+
+    # t=35m 0s: Office light -> 10% over 15 min
+    - service: light.turn_on
+      target:
+        entity_id: light.office_light
+      data:
+        brightness_pct: 10
+        transition: 900
+
+    # Dining room matter bulbs fade off after 1 hour from start
+    # Currently at ~t=35m, need to wait ~25m to reach 1h
+    - delay:
+        seconds: 1500
+
+    - service: light.turn_off
+      target:
+        entity_id:
+          - light.moes_matter_light_3
+          - light.moes_matter_light_4
+          - light.moes_matter_light_5
+          - light.moes_matter_light_6
+          - light.moes_matter_light_7
+          - light.moes_matter_light_8
+      data:
+        transition: 300
+
+    # Mark wakeup as complete
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.wakeup_active

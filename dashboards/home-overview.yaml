@@ -1,0 +1,804 @@
+button_card_templates:
+  room_tile:
+    show_state: false
+    show_label: true
+    size: 40%
+    tap_action:
+      action: navigate
+      navigation_path: "[[[return variables.popup_hash]]]"
+    label: |
+      [[[
+        var parts = [];
+        if (variables.presence_entity && states[variables.presence_entity] && states[variables.presence_entity].state === 'on') {
+          parts.push('Occupied');
+        }
+        if (variables.light_entity && states[variables.light_entity] && states[variables.light_entity].state === 'on') {
+          var bri = states[variables.light_entity].attributes.brightness;
+          parts.push(bri ? 'Lights ' + Math.round(bri / 255 * 100) + '%' : 'Lights on');
+        }
+        return parts.length ? parts.join('  ·  ') : '\u00a0';
+      ]]]
+    custom_fields:
+      temp: |
+        [[[
+          if (!variables.temp_entity || !states[variables.temp_entity]) return '';
+          var t = Math.round(parseFloat(states[variables.temp_entity].state));
+          return '<span style="font-size:12px;color:rgba(255,255,255,0.4);line-height:1">' + t + '°</span>';
+        ]]]
+    styles:
+      card:
+        - background-color: |
+            [[[
+              if (variables.light_entity && states[variables.light_entity] && states[variables.light_entity].state === 'on') {
+                return 'rgba(40, 42, 52, 0.97)';
+              }
+              return 'rgba(22, 24, 30, 0.92)';
+            ]]]
+        - border-radius: 20px
+        - border: 1px solid rgba(255,255,255,0.06)
+        - box-shadow: none
+        - padding: 20px
+        - cursor: pointer
+        - transition: background-color 0.3s
+      name:
+        - font-size: 13px
+        - font-weight: 600
+        - letter-spacing: 0.04em
+        - text-transform: uppercase
+        - color: rgba(255,255,255,0.85)
+        - justify-self: start
+        - margin-top: 12px
+      label:
+        - font-size: 11px
+        - color: rgba(255,255,255,0.4)
+        - justify-self: start
+        - margin-top: 3px
+      icon:
+        - color: |
+            [[[
+              if (variables.light_entity && states[variables.light_entity] && states[variables.light_entity].state === 'on') {
+                return '#f0a535';
+              }
+              return 'rgba(255,255,255,0.25)';
+            ]]]
+        - width: 32px
+        - height: 32px
+      img_cell:
+        - justify-content: start
+        - align-self: start
+      grid:
+        - grid-template-areas: '"i temp" "n n" "l l"'
+        - grid-template-columns: 1fr auto
+        - grid-template-rows: auto auto auto
+      custom_fields:
+        temp:
+          - display: flex
+          - align-items: flex-start
+          - justify-content: flex-end
+          - padding-top: 2px
+
+title: Home Overview
+
+views:
+  # ── VIEW 1: HOME ──────────────────────────────────────────────
+  - title: Home
+    path: home
+    icon: mdi:home
+    cards:
+
+      # Minimal test
+      - type: custom:mushroom-entity-card
+        entity: input_boolean.cabinet_fan_auto
+        name: TEST - Open Living Room
+        tap_action:
+          action: navigate
+          navigation_path: "#living-room"
+
+      - type: vertical-stack
+        cards:
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: "#living-room"
+            name: Living Room
+            icon: mdi:sofa
+            cards:
+              - type: markdown
+                content: "## It works!"
+
+  # ── VIEW 2: MEDIA ─────────────────────────────────────────────
+  - title: Media
+    path: media
+    icon: mdi:play-circle
+    cards:
+      - type: custom:mushroom-title-card
+        title: Speakers
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-media-player-card
+            entity: media_player.office
+            name: Office
+            use_media_info: true
+            show_volume_level: true
+            media_controls:
+              - play_pause_stop
+              - previous
+              - next
+            volume_controls:
+              - volume_set
+            layout: vertical
+          - type: custom:mushroom-media-player-card
+            entity: media_player.cozinha_speaker
+            name: Kitchen
+            use_media_info: true
+            show_volume_level: true
+            media_controls:
+              - play_pause_stop
+            volume_controls:
+              - volume_set
+            layout: vertical
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-media-player-card
+            entity: media_player.quarto_speaker
+            name: Quarto
+            use_media_info: true
+            show_volume_level: true
+            media_controls:
+              - play_pause_stop
+            volume_controls:
+              - volume_set
+            layout: vertical
+          - type: custom:mushroom-media-player-card
+            entity: media_player.quarto_2_speaker
+            name: Quarto 2
+            use_media_info: true
+            show_volume_level: true
+            media_controls:
+              - play_pause_stop
+            volume_controls:
+              - volume_set
+            layout: vertical
+      - type: custom:mushroom-media-player-card
+        entity: media_player.banheiro_speaker
+        name: Bathroom
+        use_media_info: true
+        show_volume_level: true
+        media_controls:
+          - play_pause_stop
+        volume_controls:
+          - volume_set
+
+      - type: custom:mushroom-title-card
+        title: Apple TV
+      - type: custom:mushroom-media-player-card
+        entity: media_player.living_room_apple_tv
+        name: Living Room Apple TV
+        use_media_info: true
+        show_volume_level: true
+        media_controls:
+          - play_pause_stop
+          - previous
+          - next
+        volume_controls:
+          - volume_set
+
+      - type: custom:mushroom-title-card
+        title: Downloads & Library
+      - type: entities
+        entities:
+          - entity: sensor.qbittorrent_download_speed
+            name: Download Speed
+            icon: mdi:download
+          - entity: sensor.qbittorrent_upload_speed
+            name: Upload Speed
+            icon: mdi:upload
+          - entity: sensor.qbittorrent_active_torrents
+            name: Active Torrents
+            icon: mdi:magnet
+          - entity: sensor.qbittorrent_all_torrents
+            name: Total Torrents
+          - entity: sensor.sonarr_upcoming
+            name: Sonarr Upcoming
+            icon: mdi:television-classic
+          - entity: sensor.radarr_disk_space_movies
+            name: Radarr Disk Space
+            icon: mdi:movie
+
+  # ── VIEW 3: NETWORK ───────────────────────────────────────────
+  - title: Network
+    path: network
+    icon: mdi:router-wireless
+    cards:
+      - type: custom:mushroom-title-card
+        title: Eero Network
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: sensor.den_1_connected_clients
+            icon: mdi:devices
+            name: Clients
+          - type: entity
+            entity: sensor.den_1_download_speed
+            icon: mdi:download
+            name: Download
+          - type: entity
+            entity: sensor.den_1_upload_speed
+            icon: mdi:upload
+            name: Upload
+      - type: entities
+        title: Eero Nodes
+        entities:
+          - entity: sensor.den_1_living_room_status
+            name: Living Room
+            icon: mdi:router-wireless
+          - entity: sensor.den_1_office_status
+            name: Office
+            icon: mdi:router-wireless
+          - entity: sensor.den_1_hallway_status
+            name: Hallway
+            icon: mdi:router-wireless
+          - entity: sensor.den_1_guest_room_status
+            name: Guest Room
+            icon: mdi:router-wireless
+          - entity: sensor.den_1_music_room_status
+            name: Music Room
+            icon: mdi:router-wireless
+          - entity: sensor.den_1_status
+            name: Gateway
+            icon: mdi:router-wireless
+          - entity: sensor.den_1_public_ip
+            name: Public IP
+            icon: mdi:earth
+          - entity: sensor.den_1_wan_router_ip
+            name: WAN Router IP
+            icon: mdi:wan
+
+      - type: custom:mushroom-title-card
+        title: Key Devices
+      - type: entities
+        entities:
+          - entity: binary_sensor.den_1_a2_server_wired_connected
+            name: a2-server
+            icon: mdi:server
+          - entity: binary_sensor.den_1_dongle_m2870_wired_connected
+            name: Sonoff Zigbee Dongle
+            icon: mdi:zigbee
+          - entity: binary_sensor.den_1_apple_tv_living_room_wireless_connected
+            name: Apple TV
+            icon: mdi:apple
+          - entity: binary_sensor.den_1_bose_soundbar_700_wireless_connected
+            name: Bose Soundbar
+            icon: mdi:speaker
+          - entity: binary_sensor.den_1_tv_wireless_connected
+            name: TV
+            icon: mdi:television
+          - entity: binary_sensor.den_1_printer_wireless_connected
+            name: Printer
+            icon: mdi:printer
+
+      - type: custom:mushroom-title-card
+        title: People
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-person-card
+            entity: person.joe
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.joes_iphone_battery_level
+            name: iPhone Battery
+            icon: mdi:battery
+            layout: vertical
+          - type: custom:mushroom-entity-card
+            entity: sensor.joes_iphone_connection_type
+            name: Connection
+            icon: mdi:signal
+            layout: vertical
+
+  # ── VIEW TEST ─────────────────────────────────────────────────
+  - title: Test
+    path: test
+    icon: mdi:bug
+    cards:
+      - type: custom:mushroom-entity-card
+        entity: input_boolean.cabinet_fan_auto
+        name: Open Popup
+        tap_action:
+          action: navigate
+          navigation_path: "#test-popup"
+
+      - type: vertical-stack
+        cards:
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: "#test-popup"
+            name: Test Popup
+            icon: mdi:check
+            cards:
+              - type: markdown
+                content: "## It works!"  # ── VIEW 1: HOME ──────────────────────────────────────────────
+  - title: Home
+    path: home
+    icon: mdi:home
+    cards:
+
+      # Room tile grid
+      - type: custom:layout-card
+        layout_type: custom:grid-layout
+        layout:
+          grid-template-columns: repeat(3, 1fr)
+          grid-column-gap: 12px
+          grid-row-gap: 12px
+          padding: 16px
+          mediaquery:
+            "(max-width: 768px)":
+              grid-template-columns: repeat(2, 1fr)
+        cards:
+
+          # ── Header chips ─────────────────────────────────────
+          - view_layout:
+              grid-column: 1 / -1
+            type: custom:mushroom-chips-card
+            chips:
+              - type: weather
+                entity: weather.forecast_home
+                show_temperature: true
+                show_conditions: true
+              - type: entity
+                entity: person.joe
+                icon: mdi:account
+              - type: entity
+                entity: sensor.joes_iphone_battery_level
+                icon: mdi:cellphone
+
+          # ── Quick scenes ──────────────────────────────────────
+          - view_layout:
+              grid-column: 1 / -1
+            type: horizontal-stack
+            cards:
+              - type: custom:mushroom-entity-card
+                entity: script.wakeup_sequence
+                name: Morning
+                icon: mdi:weather-sunset-up
+                tap_action:
+                  action: call-service
+                  service: script.turn_on
+                  target:
+                    entity_id: script.wakeup_sequence
+                layout: vertical
+              - type: custom:mushroom-entity-card
+                entity: script.evening_sequence
+                name: Evening
+                icon: mdi:weather-sunset-down
+                tap_action:
+                  action: call-service
+                  service: script.turn_on
+                  target:
+                    entity_id: script.evening_sequence
+                layout: vertical
+              - type: custom:mushroom-entity-card
+                entity: script.bedtime_sequence
+                name: Bedtime
+                icon: mdi:weather-night
+                tap_action:
+                  action: call-service
+                  service: script.turn_on
+                  target:
+                    entity_id: script.bedtime_sequence
+                layout: vertical
+              - type: custom:mushroom-entity-card
+                entity: light.living_room
+                name: All Off
+                icon: mdi:lightbulb-off
+                tap_action:
+                  action: call-service
+                  service: light.turn_off
+                  target:
+                    entity_id: all
+                layout: vertical
+
+          # ── Room tiles ────────────────────────────────────────
+
+          - type: custom:button-card
+            template: room_tile
+            name: Living Room
+            icon: mdi:sofa
+            variables:
+              popup_hash: "#living-room"
+              light_entity: light.living_room
+              temp_entity: sensor.living_room_sensor_temperature
+              presence_entity: binary_sensor.living_room_sensor_presence
+
+          - type: custom:button-card
+            template: room_tile
+            name: Office
+            icon: mdi:desk
+            variables:
+              popup_hash: "#office"
+              light_entity: light.office
+              temp_entity: sensor.office_sensor_temperature
+              presence_entity: binary_sensor.office_sensor_presence
+
+          - type: custom:button-card
+            template: room_tile
+            name: Bedroom
+            icon: mdi:bed-king
+            variables:
+              popup_hash: "#bedroom"
+              light_entity: light.bedroom
+              temp_entity: sensor.bedroom_sensor_temperature
+              presence_entity: binary_sensor.bedroom_sensor_presence
+
+          - type: custom:button-card
+            template: room_tile
+            name: Hallway
+            icon: mdi:door-open
+            variables:
+              popup_hash: "#hallway"
+              light_entity: light.hallway
+              temp_entity: sensor.hallway_sensor_temperature
+              presence_entity: binary_sensor.hallway_sensor_presence
+
+          - type: custom:button-card
+            template: room_tile
+            name: Dining Room
+            icon: mdi:silverware-fork-knife
+            variables:
+              popup_hash: "#dining-room"
+              light_entity: light.dinning_room
+              temp_entity: sensor.kitchen_sensor_temperature
+
+          - type: custom:button-card
+            template: room_tile
+            name: Guest Room
+            icon: mdi:bed
+            variables:
+              popup_hash: "#guest-room"
+              light_entity: light.guest_room_back_lamp
+              temp_entity: sensor.guest_room_sensor_temperature
+              presence_entity: binary_sensor.guest_room_sensor_presence
+
+          - view_layout:
+              grid-column: 1 / -1
+            type: custom:button-card
+            template: room_tile
+            name: Server
+            icon: mdi:server
+            variables:
+              popup_hash: "#server"
+              temp_entity: sensor.server_cabinet_sensor_temperature
+
+      # ── POPUPS ────────────────────────────────────────────────
+      - type: vertical-stack
+        cards:
+
+          # ── POPUP: Living Room ──────────────────────────────────
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: "#living-room"
+            name: Living Room
+            icon: mdi:sofa
+            cards:
+              - type: custom:mushroom-light-card
+                entity: light.living_room
+                name: All Lights
+                show_brightness_control: true
+                show_color_control: true
+                use_light_color: true
+              - type: horizontal-stack
+                cards:
+                  - type: custom:mushroom-light-card
+                    entity: light.tv_light_1
+                    name: TV Left
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.tv_light_2
+                    name: TV Right
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.tv_cabinet_strip
+                    name: Cabinet
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+              - type: custom:mushroom-cover-card
+                entity: cover.living_room_shade
+                name: Shade
+                show_buttons_control: true
+                show_position_control: true
+              - type: custom:mushroom-media-player-card
+                entity: media_player.living_room_apple_tv
+                name: Apple TV
+                use_media_info: true
+                media_controls:
+                  - play_pause_stop
+
+          # ── POPUP: Office ───────────────────────────────────────
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: "#office"
+            name: Office
+            icon: mdi:desk
+            cards:
+              - type: custom:mushroom-light-card
+                entity: light.office
+                name: All Lights
+                show_brightness_control: true
+                show_color_control: true
+                use_light_color: true
+              - type: horizontal-stack
+                cards:
+                  - type: custom:mushroom-light-card
+                    entity: light.desk_lamp
+                    name: Desk Lamp
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.office_light
+                    name: Ceiling
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.office_cabinet_strip
+                    name: Cabinet
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+              - type: custom:mushroom-cover-card
+                entity: cover.office_shade
+                name: Shade
+                show_buttons_control: true
+                show_position_control: true
+              - type: custom:mushroom-media-player-card
+                entity: media_player.office
+                name: Sonos
+                use_media_info: true
+                media_controls:
+                  - play_pause_stop
+                  - previous
+                  - next
+                volume_controls:
+                  - volume_set
+
+          # ── POPUP: Bedroom ──────────────────────────────────────
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: "#bedroom"
+            name: Bedroom
+            icon: mdi:bed-king
+            cards:
+              - type: custom:mushroom-light-card
+                entity: light.bedroom
+                name: All Lights
+                show_brightness_control: true
+                show_color_control: true
+                use_light_color: true
+              - type: horizontal-stack
+                cards:
+                  - type: custom:mushroom-light-card
+                    entity: light.moes_matter_light
+                    name: Bedside 1
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.moes_matter_light_2
+                    name: Bedside 2
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.underbed_1
+                    name: Underbed 1
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.underbed_2
+                    name: Underbed 2
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+              - type: custom:mushroom-cover-card
+                entity: cover.bedroom_blinds
+                name: Blinds
+                show_buttons_control: true
+                show_position_control: true
+              - type: custom:mushroom-media-player-card
+                entity: media_player.quarto_speaker
+                name: Sonos
+                use_media_info: true
+                media_controls:
+                  - play_pause_stop
+                volume_controls:
+                  - volume_set
+
+          # ── POPUP: Hallway ──────────────────────────────────────
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: "#hallway"
+            name: Hallway
+            icon: mdi:door-open
+            cards:
+              - type: custom:mushroom-light-card
+                entity: light.hallway
+                name: All Lights
+                show_brightness_control: true
+                show_color_control: true
+                use_light_color: true
+              - type: horizontal-stack
+                cards:
+                  - type: custom:mushroom-light-card
+                    entity: light.hallway_spot_1
+                    name: Spot 1
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.hallway_spot_2
+                    name: Spot 2
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.hallway_spot_4_2
+                    name: Spot 3
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.hallway_spot_4
+                    name: Spot 4
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+
+          # ── POPUP: Dining Room ──────────────────────────────────
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: "#dining-room"
+            name: Dining Room
+            icon: mdi:silverware-fork-knife
+            cards:
+              - type: custom:mushroom-light-card
+                entity: light.dinning_room
+                name: All Lights
+                show_brightness_control: true
+                show_color_control: true
+                use_light_color: true
+              - type: horizontal-stack
+                cards:
+                  - type: custom:mushroom-light-card
+                    entity: light.moes_matter_light_3
+                    name: Light 1
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.moes_matter_light_4
+                    name: Light 2
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.moes_matter_light_5
+                    name: Light 3
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+              - type: horizontal-stack
+                cards:
+                  - type: custom:mushroom-light-card
+                    entity: light.moes_matter_light_6
+                    name: Light 4
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.moes_matter_light_7
+                    name: Light 5
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+                  - type: custom:mushroom-light-card
+                    entity: light.moes_matter_light_8
+                    name: Light 6
+                    show_brightness_control: true
+                    use_light_color: true
+                    layout: vertical
+              - type: custom:mushroom-light-card
+                entity: light.dinning_room_plant_light
+                name: Plant Light
+                show_brightness_control: true
+                use_light_color: true
+              - type: custom:mushroom-cover-card
+                entity: cover.dinning_room_shade
+                name: Shade
+                show_buttons_control: true
+                show_position_control: true
+
+          # ── POPUP: Guest Room ───────────────────────────────────
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: "#guest-room"
+            name: Guest Room
+            icon: mdi:bed
+            cards:
+              - type: custom:mushroom-light-card
+                entity: light.guest_room_back_lamp
+                name: Lamp
+                show_brightness_control: true
+                use_light_color: true
+              - type: custom:mushroom-cover-card
+                entity: cover.guest_room_blinds
+                name: Blinds
+                show_buttons_control: true
+                show_position_control: true
+
+          # ── POPUP: Server ───────────────────────────────────────
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: "#server"
+            name: Server
+            icon: mdi:server
+            cards:
+              - type: horizontal-stack
+                cards:
+                  - type: gauge
+                    entity: sensor.system_monitor_processor_temperature
+                    name: CPU Temp
+                    min: 0
+                    max: 100
+                    severity:
+                      green: 0
+                      yellow: 65
+                      red: 85
+                  - type: gauge
+                    entity: sensor.server_cabinet_sensor_temperature
+                    name: Cabinet
+                    min: 15
+                    max: 50
+                    severity:
+                      green: 15
+                      yellow: 35
+                      red: 42
+              - type: custom:mushroom-fan-card
+                entity: fan.server_cabinet_fan_cabinet_fan
+                name: Cabinet Fan
+                show_percentage_control: true
+                icon_animation: true
+              - type: entities
+                entities:
+                  - entity: sensor.server_cabinet_fan_cabinet_fan_rpm
+                    name: Fan RPM
+                    icon: mdi:fan
+                  - entity: input_boolean.cabinet_fan_auto
+                    name: Auto Control
+                    icon: mdi:fan-auto
+              - type: horizontal-stack
+                cards:
+                  - type: gauge
+                    entity: sensor.system_monitor_processor_use
+                    name: CPU Usage
+                    min: 0
+                    max: 100
+                    severity:
+                      green: 0
+                      yellow: 60
+                      red: 85
+                  - type: gauge
+                    entity: sensor.system_monitor_memory_usage
+                    name: Memory
+                    min: 0
+                    max: 100
+                    severity:
+                      green: 0
+                      yellow: 70
+                      red: 90
+
+
