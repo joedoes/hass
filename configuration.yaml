@@ -1,6 +1,6 @@
 homeassistant:
   external_url: "https://ha.88d.io"
-  internal_url: "http://192.168.4.100:8123"
+  internal_url: "http://192.168.4.101:8123"
 
 # Loads default set of integrations. Do not remove.
 default_config:
@@ -219,3 +219,6 @@ light:
       - light.moes_matter_light_2
       - light.underbed_1
       - light.underbed_2
+
+shell_command:
+  ha_config_git_push: bash /config/scripts/git_push.sh
