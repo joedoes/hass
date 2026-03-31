@@ -189,12 +189,12 @@ light:
   - platform: group
     name: Dinning Room
     entities:
-      - light.moes_matter_light_3
-      - light.moes_matter_light_4
-      - light.moes_matter_light_5
-      - light.moes_matter_light_6
-      - light.moes_matter_light_7
-      - light.moes_matter_light_8
+      - light.dinning_room_1
+      - light.dinning_room_2
+      - light.dinning_room_3
+      - light.dinning_room_4
+      - light.dinning_room_5
+      - light.dinning_room_6
       - light.dinning_room_plant_light
 
   - platform: group
@@ -215,8 +215,8 @@ light:
   - platform: group
     name: Bedroom
     entities:
-      - light.moes_matter_light
-      - light.moes_matter_light_2
+      - light.master_bedside_lamp_1
+      - light.master_bedside_lamp_2
       - light.underbed_1
       - light.underbed_2
 
